@@ -3,6 +3,6 @@
 namespace app\Models;
 
 enum ERole: string {
-    case REGULAR = 'Regular';
+    case REGULAR = 'User';
     case ADMIN = 'Admin';
 }

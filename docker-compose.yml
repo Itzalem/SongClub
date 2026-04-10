@@ -20,9 +20,10 @@ services:
             MYSQL_ROOT_PASSWORD: 'secret123'
             MYSQL_USER: 'developer'
             MYSQL_PASSWORD: 'secret123'
-            MYSQL_DATABASE: 'developmentdb'
+            MYSQL_DATABASE: 'SongClub'
         volumes:
             - mysqldata:/var/lib/mysql
+            - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
         ports:
             - 3306:3306
     phpmyadmin:

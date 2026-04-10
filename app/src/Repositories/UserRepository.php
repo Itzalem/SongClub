@@ -48,6 +48,60 @@ class UserRepository extends Repository implements IUserRepository
         return $this->buildUserModel($userData) ?: null; //why 
     }
 
+    public function getUserByEmail(string $email): ?User
+    {
+        $sql        = "SELECT * FROM users WHERE email = :email";
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':email', $email, PDO::PARAM_STR);
+        $statement->execute();
+        $userData = $statement->fetch(PDO::FETCH_ASSOC);
+        return $this->buildUserModel($userData) ?: null;
+    }
+
+    public function getUserByUsername(string $username): ?User
+    {
+        $sql        = "SELECT * FROM users WHERE username = :username";
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':username', $username, PDO::PARAM_STR);
+        $statement->execute();
+        $userData = $statement->fetch(PDO::FETCH_ASSOC);
+        return $this->buildUserModel($userData) ?: null;
+    }
+
+    public function getAllUsers(): array
+    {
+        $sql        = "SELECT * FROM users ORDER BY created_at DESC";
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->execute();
+        $rows  = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $users = [];
+        foreach ($rows as $row) {
+            $users[] = $this->buildUserModel($row);
+        }
+        return $users;
+    }
+
+    public function searchUser(string $query): array
+    {
+        $sql        = "SELECT * FROM users WHERE username LIKE :q1 OR email LIKE :q2";
+        $like       = '%' . $query . '%';
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':q1', $like, PDO::PARAM_STR);
+        $statement->bindParam(':q2', $like, PDO::PARAM_STR);
+        $statement->execute();
+        $rows  = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $users = [];
+        foreach ($rows as $row) {
+            $users[] = $this->buildUserModel($row);
+        }
+        return $users;
+    }
+
+
     public function createUser(User $user): int
     {
         // 1. Definimos el SQL con marcadores para evitar Inyección SQL [cite: 1233]

@@ -1,0 +1,108 @@
+/* =====================================================
+   SongClub — Main Stylesheet
+   ===================================================== */
+
+:root {
+    --sc-olive:        #3a4a28;
+    --sc-olive-light:  #4e6235;
+    --sc-blue:         #4a6fa5;
+    --sc-blue-light:   #dde8f5;
+    --sc-cream:        #f5f0e8;
+    --sc-yellow:       #e8d85a;
+    --sc-text:         #1e2a16;
+    --sc-text-muted:   #6b7280;
+    --sc-bg:           #f8f9fa;
+    --sc-card-bg:      #ffffff;
+    --sc-radius:       12px;
+    --sc-radius-pill:  50px;
+    --sc-shadow:       0 4px 16px rgba(0,0,0,0.08);
+    --sc-shadow-hover: 0 8px 28px rgba(0,0,0,0.14);
+    --sc-transition:   0.2s ease;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--sc-bg);
+    color: var(--sc-text);
+}
+
+/* Navbar */
+.navbar { background-color: var(--sc-olive) !important; padding: 0.75rem 0; }
+.navbar-brand { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; color: var(--sc-cream) !important; }
+.navbar .nav-link { color: rgba(245,240,232,0.85) !important; font-weight: 500; transition: color var(--sc-transition); padding: 0.4rem 0.8rem; border-radius: var(--sc-radius-pill); }
+.navbar .nav-link:hover, .navbar .nav-link:focus { color: var(--sc-cream) !important; background-color: rgba(255,255,255,0.1); }
+
+/* Navbar search */
+.navbar-search-wrapper { position: relative; }
+#user-search { border-radius: var(--sc-radius-pill); border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #fff; padding: 0.35rem 1rem; font-size: 0.875rem; width: 200px; transition: all var(--sc-transition); }
+#user-search::placeholder { color: rgba(255,255,255,0.5); }
+#user-search:focus { outline: none; border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); width: 240px; }
+#search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border-radius: var(--sc-radius); box-shadow: var(--sc-shadow-hover); z-index: 1000; overflow: hidden; min-width: 240px; }
+#search-results a { display: block; padding: 0.6rem 1rem; color: var(--sc-text); text-decoration: none; font-size: 0.875rem; transition: background var(--sc-transition); }
+#search-results a:hover { background: var(--sc-blue-light); }
+
+/* Buttons */
+.btn { border-radius: var(--sc-radius-pill); font-weight: 600; transition: all var(--sc-transition); }
+.btn-sc-primary { background-color: var(--sc-olive); color: var(--sc-cream); border: none; padding: 0.55rem 1.5rem; }
+.btn-sc-primary:hover, .btn-sc-primary:focus { background-color: var(--sc-olive-light); color: var(--sc-cream); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(58,74,40,0.3); }
+.btn-sc-primary:active { transform: scale(0.97); }
+.btn-sc-outline { background: transparent; color: var(--sc-olive); border: 2px solid var(--sc-olive); padding: 0.5rem 1.4rem; }
+.btn-sc-outline:hover { background: var(--sc-olive); color: var(--sc-cream); }
+
+/* Song cards */
+.song-card { background: var(--sc-card-bg); border-radius: var(--sc-radius); box-shadow: var(--sc-shadow); border: none; transition: transform var(--sc-transition), box-shadow var(--sc-transition); overflow: hidden; }
+.song-card:hover { transform: translateY(-4px); box-shadow: var(--sc-shadow-hover); }
+.song-card .card-body { padding: 1.25rem; }
+.song-card .song-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; color: var(--sc-text); }
+.song-card .song-artist { color: var(--sc-text-muted); font-size: 0.875rem; margin-bottom: 0.75rem; }
+.song-card .badge-genre { background: var(--sc-blue-light); color: var(--sc-blue); border-radius: var(--sc-radius-pill); font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.75rem; }
+
+/* Like / Fav buttons */
+.btn-like, .btn-fav { border-radius: var(--sc-radius-pill); font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.9rem; border: 1.5px solid; transition: background-color var(--sc-transition), color var(--sc-transition), transform 0.1s ease; }
+.btn-like { border-color: #e07070; color: #e07070; background: transparent; }
+.btn-like:hover, .btn-like.active { background-color: #e07070; color: #fff; }
+.btn-like:active { transform: scale(0.93); }
+.btn-fav { border-color: var(--sc-olive); color: var(--sc-olive); background: transparent; }
+.btn-fav:hover, .btn-fav.active { background-color: var(--sc-olive); color: var(--sc-cream); }
+.btn-fav:active { transform: scale(0.93); }
+
+/* Forms */
+.form-control, .form-select { border-radius: var(--sc-radius-pill); border: 1.5px solid #d1d5db; padding: 0.6rem 1.1rem; font-size: 0.95rem; transition: border-color var(--sc-transition), box-shadow var(--sc-transition); }
+textarea.form-control { border-radius: var(--sc-radius); }
+.form-control:focus, .form-select:focus { border-color: var(--sc-olive); box-shadow: 0 0 0 3px rgba(58,74,40,0.12); }
+.form-label { font-weight: 600; font-size: 0.875rem; color: var(--sc-text); margin-bottom: 0.35rem; }
+
+/* Auth pages */
+.auth-wrapper { min-height: 80vh; display: flex; align-items: center; justify-content: center; }
+.auth-card { background: var(--sc-card-bg); border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); padding: 2.5rem 2rem; width: 100%; max-width: 420px; }
+.auth-card h1 { font-weight: 800; font-size: 1.75rem; color: var(--sc-text); margin-bottom: 0.25rem; }
+.auth-card .subtitle { color: var(--sc-text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
+
+/* Hero */
+.sc-hero { background: linear-gradient(135deg, var(--sc-blue) 0%, #3a5a8a 100%); color: #fff; padding: 4rem 0 3rem; margin-bottom: 2.5rem; }
+.sc-hero h1 { font-weight: 800; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; color: var(--sc-yellow); }
+.sc-hero p { font-size: 1.1rem; opacity: 0.9; max-width: 480px; }
+
+/* Section titles */
+.sc-section-title { font-weight: 700; font-size: 1.35rem; color: var(--sc-text); margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--sc-blue-light); }
+
+/* Profile */
+.profile-header { background: var(--sc-olive); color: var(--sc-cream); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+.profile-header h2 { font-weight: 800; font-size: 1.8rem; color: var(--sc-yellow); }
+.profile-avatar { width: 72px; height: 72px; background: var(--sc-yellow); color: var(--sc-olive); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; }
+
+/* Footer */
+footer { background: var(--sc-olive); color: rgba(245,240,232,0.7); padding: 1.5rem 0; font-size: 0.875rem; }
+footer a { color: rgba(245,240,232,0.85); }
+footer a:hover { color: var(--sc-yellow); }
+
+/* Alerts */
+.alert { border-radius: var(--sc-radius); border: none; font-weight: 500; }
+
+/* Responsive */
+@media (max-width: 576px) {
+    .auth-card { padding: 1.75rem 1.25rem; }
+    .sc-hero { padding: 2.5rem 0 2rem; }
+    #user-search { width: 140px; }
+    #user-search:focus { width: 160px; }
+}

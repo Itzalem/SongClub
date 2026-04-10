@@ -2,9 +2,9 @@
 
 class Interaction {
 
-    public $postId;
-    public $songId; // para poder mostrar interacciones por canción
-    public $createdAt;
+    public int $user_id;
+    public int $song_id; //to show interactions per songs
+    public string $created_at;
 
     public function __construct($data = []) {
         foreach($data as $key => $value) {

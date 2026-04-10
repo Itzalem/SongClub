@@ -1,11 +1,11 @@
 <?php
 
 class Post {
-    public $id;
-    public $userId;
-    public $songId;   // ahora el post apunta directamente a la canción
-    public $caption;
-    public $createdAt;
+    public int $id;
+    public int $user_id;
+    public int $song_id;
+    public ?string $caption;
+    public string $created_at;
 
     public function __construct($data = []) {
         foreach($data as $key => $value) {
