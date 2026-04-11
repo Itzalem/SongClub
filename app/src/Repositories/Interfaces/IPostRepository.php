@@ -6,7 +6,7 @@ use App\Models\Post;
 
 interface IPostRepository
 {
-    public function getLastByUserId(int $userId): ?Post;
+    public function getAllByUserId(int $userId): array;
     public function createPost(Post $post): int;
     public function updatePost(Post $post): int;
     public function deletePost(int $id): void;

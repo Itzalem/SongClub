@@ -38,15 +38,17 @@ class ProfileController extends Controller
         $vm->user    = $user;
         $vm->isOwner = ($currentUserId > 0 && $currentUserId === $profileUserId);
 
-        // Last listened post (with joined song data)
-        $postService  = new PostService(new PostRepository());
-        $vm->lastPost = $postService->getLastByUser($profileUserId);
+        // En ProfileController.php, dentro de show()
+$postService = new PostService(new PostRepository());
+$commentRepo = new CommentRepository();
 
-        // Comments on that post
-        if ($vm->lastPost !== null) {
-            $commentRepo  = new CommentRepository();
-            $vm->comments = $commentRepo->getCommentsByPost($vm->lastPost->id);
-        }
+// Obtener todos los posts
+$vm->posts = $postService->getAllByUser($profileUserId);
+
+// Para cada post, adjuntamos sus comentarios (puedes añadir una propiedad temporal al modelo Post)
+foreach ($vm->posts as $post) {
+    $post->comments = $commentRepo->getCommentsByPost($post->id);
+}
 
         // Favorites (visible to everyone)
         $favService    = new FavoriteService(new InteractionRepository());

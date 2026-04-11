@@ -1,55 +1,62 @@
 (function () {
-    const form = document.getElementById('comment-form');
-    if (!form) return;
+    // Seleccionamos todos los formularios de comentarios de la página
+    const forms = document.querySelectorAll('.comment-form');
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+    forms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        const postId  = parseInt(form.dataset.postId, 10);
-        const textarea = document.getElementById('comment-content');
-        const content  = textarea.value.trim();
+            const postId = parseInt(this.dataset.postId, 10);
+            const textarea = this.querySelector('.comment-content');
+            const content = textarea.value.trim();
 
-        if (!content) return;
+            if (!content) return;
 
-        fetch('/comments/store', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ post_id: postId, content: content }),
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.error) return;
+            fetch('/comments/store', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ post_id: postId, content: content }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
 
-            // Remove "no comments yet" placeholder if present
-            const placeholder = document.getElementById('no-comments');
-            if (placeholder) placeholder.remove();
+                // Localizamos la lista de comentarios específica para este post
+                const commentsList = document.getElementById('comments-list-' + postId);
+                
+                // Creamos el nuevo elemento de comentario (protegido contra XSS)
+                const li = document.createElement('li');
+                li.className = 'comment-item';
 
-            // Build new comment element (textContent only — no XSS risk)
-            const li       = document.createElement('li');
-            li.className   = 'mb-3 p-3 bg-white rounded-3 shadow-sm';
+                const header = document.createElement('div');
+                header.className = 'd-flex justify-content-between mb-1';
 
-            const header   = document.createElement('div');
-            header.className = 'd-flex justify-content-between mb-1';
+                const strong = document.createElement('strong');
+                strong.className = 'comment-author';
+                strong.textContent = data.username;
 
-            const strong   = document.createElement('strong');
-            strong.textContent = data.username;
+                const small = document.createElement('small');
+                small.className = 'text-muted';
+                small.textContent = data.created_at;
 
-            const small    = document.createElement('small');
-            small.className = 'text-muted';
-            small.textContent = data.created_at;
+                header.appendChild(strong);
+                header.appendChild(small);
 
-            header.appendChild(strong);
-            header.appendChild(small);
+                const p = document.createElement('p');
+                p.className = 'mb-0';
+                p.textContent = data.content;
 
-            const p        = document.createElement('p');
-            p.className    = 'mb-0';
-            p.textContent  = data.content;
+                li.appendChild(header);
+                li.appendChild(p);
 
-            li.appendChild(header);
-            li.appendChild(p);
-
-            document.getElementById('comments-list').appendChild(li);
-            textarea.value = '';
+                // Añadimos el comentario al final de la lista y limpiamos el formulario
+                commentsList.appendChild(li);
+                textarea.value = '';
+            })
+            .catch(err => console.error('Error enviando comentario:', err));
         });
     });
 })();

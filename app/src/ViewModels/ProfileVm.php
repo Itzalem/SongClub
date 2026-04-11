@@ -10,7 +10,8 @@ class ProfileVm
 {
     public User $user;
 
-    public ?Post $lastPost = null;
+    /** @var \App\Models\Post[] */
+    public array $posts = [];
 
     /** @var \App\Models\Comment[] */
     public array $comments = [];

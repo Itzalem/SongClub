@@ -20,25 +20,28 @@ class PostRepository extends Repository implements IPostRepository
         return $post;
     }
 
-    public function getLastByUserId(int $userId): ?Post
-    {
-        $sql = "SELECT p.*, s.title AS song_title, s.artist AS song_artist,
-                       s.album AS song_album, s.genre AS song_genre, s.link AS song_link
-                FROM posts p
-                JOIN songs s ON p.song_id = s.id
-                WHERE p.user_id = :id
-                ORDER BY p.created_at DESC
-                LIMIT 1";
-        $connection = $this->getConnection();
-        $statement  = $connection->prepare($sql);
-        $statement->bindParam(':id', $userId, PDO::PARAM_INT);
-        $statement->execute();
-        $postData = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!$postData) {
-            return null;
-        }
-        return new Post($postData);
+    // En PostRepository.php
+public function getAllByUserId(int $userId): array
+{
+    $sql = "SELECT p.*, s.title AS song_title, s.artist AS song_artist,
+                   s.album AS song_album, s.genre AS song_genre, s.link AS song_link
+            FROM posts p
+            JOIN songs s ON p.song_id = s.id
+            WHERE p.user_id = :id
+            ORDER BY p.created_at DESC"; // Eliminado el LIMIT 1
+
+    $connection = $this->getConnection();
+    $statement  = $connection->prepare($sql);
+    $statement->bindParam(':id', $userId, PDO::PARAM_INT);
+    $statement->execute();
+    
+    $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $posts = [];
+    foreach ($rows as $row) {
+        $posts[] = new Post($row);
     }
+    return $posts;
+}
 
     public function createPost(Post $post): int
     {

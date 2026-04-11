@@ -15,9 +15,10 @@ class PostService implements IPostService
         $this->repo = $repo;
     }
 
-    public function getLastByUser(int $userId): ?Post
+    // Nuevo método para obtener todos los posts
+    public function getAllByUser(int $userId): array
     {
-        return $this->repo->getLastByUserId($userId);
+        return $this->repo->getAllByUserId($userId);
     }
 
     public function createPost(int $userId, int $songId, ?string $caption): int

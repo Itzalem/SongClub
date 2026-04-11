@@ -6,6 +6,7 @@ use App\Models\Post;
 
 interface IPostService
 {
-    public function getLastByUser(int $userId): ?Post;
+    /** @return Post[] */
+    public function getAllByUser(int $userId): array;
     public function createPost(int $userId, int $songId, ?string $caption): int;
 }
