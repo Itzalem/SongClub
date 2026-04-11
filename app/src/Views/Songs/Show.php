@@ -18,7 +18,9 @@
         <?php endif; ?>
 
         <?php if (!empty($song->creator_name)): ?>
-            <p class="text-muted" style="font-size:0.85rem">Added by <?= htmlspecialchars($song->creator_name) ?></p>
+            <p class="text-muted" style="font-size:0.85rem">
+                Added by <?= htmlspecialchars($song->creator_name) ?>
+            </p>
         <?php endif; ?>
 
         <?php if (!empty($song->link)): ?>
@@ -28,10 +30,12 @@
 
         <?php if (isset($_SESSION['user_id'])): ?>
         <div class="d-flex gap-2 mt-3">
-            <button class="btn btn-like" data-song-id="<?= (int) $song->id ?>">
-                ♥ Like <span class="like-count">0</span>
+            <button class="btn btn-like <?= $isLiked ? 'active' : '' ?>"
+                    data-song-id="<?= (int) $song->id ?>">
+                ♥ Like <span class="like-count"><?= (int) $likeCount ?></span>
             </button>
-            <button class="btn btn-fav" data-song-id="<?= (int) $song->id ?>">★ Favourite</button>
+            <button class="btn btn-fav <?= $isFav ? 'active' : '' ?>"
+                    data-song-id="<?= (int) $song->id ?>">★ Favourite</button>
         </div>
         <?php endif; ?>
 

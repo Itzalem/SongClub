@@ -38,9 +38,9 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST', '/admin/users/{id:\d+}/delete', ['App\Controllers\UserController', 'delete']);
 
     // API (JSON)
-    $r->addRoute('GET', '/api/songs',                  ['App\Controllers\ApiController', 'getSongs']);
-    $r->addRoute('GET', '/api/favorites/{userId:\d+}', ['App\Controllers\ApiController', 'getFavorites']);
-    $r->addRoute('GET', '/api/users/search',           ['App\Controllers\ApiController', 'searchUsers']);
+    $r->addRoute('GET', '/api/songs',                    ['App\Controllers\SongController',     'apiIndex']);
+$r->addRoute('GET', '/api/favorites/{userId:\d+}',   ['App\Controllers\FavoriteController', 'export']);
+$r->addRoute('GET', '/api/users/search',             ['App\Controllers\UserController',     'search']);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];

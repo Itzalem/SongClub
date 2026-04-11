@@ -17,10 +17,14 @@ class UserController extends Controller {
     
     private $userService;
     private $songService;
+    private $favoriteService;
+    private $commentRepo;
 
-    public function __construct(UserService $userService, SongService $songService) {
+    public function __construct(UserService $userService, SongService $songService, FavoriteService $favoriteService, CommentRepository $commentRepo) {
         $this->userService = $userService;
         $this->songService = $songService;
+        $this->favoriteService = $favoriteService;
+        $this->commentRepo = $commentRepo;
     }
 
     public function show($profileId) {
@@ -41,9 +45,13 @@ class UserController extends Controller {
 
         // 4. Pedimos las canciones al Service
         // El Service se encargará de usar los Repositories con los JOINs que vimos
-        $vm->favorites = $this->songService->getFavorites($profileId);
+        $vm->favorites = $this->favoriteService->getFavoritesByUser($profileId);
         $vm->lastSong = $this->songService->getLastListened($profileId);
         $vm->comments = $this->songService->getCommentsForPost($vm->lastSong->id ?? 0);
+
+        if ($vm->lastPost !== null) {
+            $vm->comments = $this->commentRepo->getByPost($vm->lastPost->id);
+        }
 
         // 5. PRIVACIDAD: Solo cargamos los likes si es el dueño
         if ($vm->isOwner) {
@@ -80,6 +88,26 @@ class UserController extends Controller {
 
         header('Location: /profile/' . (int) $_SESSION['user_id']);
         exit;
+    }
+
+    // API — live user search
+    public function search(array $vars = []): void
+    {
+        $this->requireAuth();
+
+        $query  = trim($_GET['q'] ?? '');
+        $users  = (new UserService(new UserRepository()))->search($query);
+        $result = [];
+
+        foreach ($users as $u) {
+            $result[] = [
+                'id'       => $u->userId,
+                'username' => $u->username,
+                'bio'      => $u->bio,
+            ];
+        }
+
+        $this->json($result);
     }
 
 }

@@ -1,140 +1,211 @@
-<?php $pageTitle = htmlspecialchars($vm->user->username) . ' — SongClub'; ?>
+<?php $pageTitle = htmlspecialchars($vm->user->username) . '\'s Profile'; ?>
 <?php require __DIR__ . '/../partials/header.php'; ?>
 
-<div class="row g-4">
+<div class="container py-4">
+    <div class="row g-4">
 
-    <!-- Feed (left) -->
-    <div class="col-md-8">
+        <!-- Left: Feed -->
+        <div class="col-md-8">
 
-        <h3 class="sc-section-title">Last Listened</h3>
+            <h2 class="sc-section-title">Last Listened</h2>
 
-        <?php if ($vm->lastSong): ?>
-            <div class="song-card mb-3">
-                <div class="card-body">
-                    <?php if (!empty($vm->lastSong->genre)): ?>
-                        <span class="badge-genre mb-2 d-inline-block">
-                            <?= htmlspecialchars($vm->lastSong->genre) ?>
-                        </span>
-                    <?php endif; ?>
-                    <p class="song-title mb-1">
-                        <a href="/songs/<?= (int) $vm->lastSong->id ?>" style="color:inherit;text-decoration:none">
-                            <?= htmlspecialchars($vm->lastSong->title) ?>
-                        </a>
-                    </p>
-                    <p class="song-artist"><?= htmlspecialchars($vm->lastSong->artist) ?></p>
-                </div>
+            <?php if ($vm->lastPost !== null): ?>
+            <div class="song-card p-3 mb-4">
+                <?php if (!empty($vm->lastPost->song_genre)): ?>
+                    <span class="badge-genre d-inline-block mb-2">
+                        <?= htmlspecialchars($vm->lastPost->song_genre) ?>
+                    </span>
+                <?php endif; ?>
+
+                <p class="song-title mb-1"><?= htmlspecialchars($vm->lastPost->song_title) ?></p>
+                <p class="song-artist"><?= htmlspecialchars($vm->lastPost->song_artist) ?></p>
+
+                <?php if (!empty($vm->lastPost->song_album)): ?>
+                    <small class="text-muted">
+                        Album: <?= htmlspecialchars($vm->lastPost->song_album) ?>
+                    </small>
+                <?php endif; ?>
+
+                <?php if (!empty($vm->lastPost->caption)): ?>
+                    <p class="mt-2 fst-italic">"<?= htmlspecialchars($vm->lastPost->caption) ?>"</p>
+                <?php endif; ?>
+
+                <?php if (!empty($vm->lastPost->song_link)): ?>
+                    <a href="<?= htmlspecialchars($vm->lastPost->song_link) ?>"
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-sm btn-sc-outline mt-2">
+                        ▶ Listen
+                    </a>
+                <?php endif; ?>
             </div>
-        <?php else: ?>
-            <p class="text-muted">No posts yet.</p>
-        <?php endif; ?>
-
-        <?php if ($vm->isOwner): ?>
-            <a href="#" class="btn btn-sc-primary btn-sm mt-2">+ Post last listened song</a>
-        <?php endif; ?>
-
-    </div>
-
-    <!-- Side panel (right) -->
-    <div class="col-md-4">
-
-        <!-- Profile card -->
-        <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="profile-avatar" style="width:52px;height:52px;font-size:1.5rem">
-                    <?= strtoupper(substr($vm->user->username, 0, 1)) ?>
-                </div>
-                <div>
-                    <strong><?= htmlspecialchars($vm->user->username) ?></strong>
-                    <?php if ($vm->isOwner): ?>
-                        <br>
-                        <a href="#editProfile" data-bs-toggle="collapse"
-                           style="font-size:0.8rem;color:var(--sc-olive)">Edit profile</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php if (!empty($vm->user->bio)): ?>
-                <p style="font-size:0.875rem;color:var(--sc-text-muted);margin:0">
-                    <?= htmlspecialchars($vm->user->bio) ?>
-                </p>
+            <?php else: ?>
+                <p class="text-muted mb-4">No song posted yet.</p>
             <?php endif; ?>
-        </div>
 
-        <!-- Edit profile form (owner, collapsed) -->
-        <?php if ($vm->isOwner): ?>
-        <div class="collapse mb-3" id="editProfile">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <h6 style="font-weight:700;margin-bottom:0.75rem">Edit profile</h6>
-                <form method="POST" action="/profile/update">
+            <!-- Set Last Listened (owner only) -->
+            <?php if ($vm->isOwner && !empty($vm->songs)): ?>
+            <div class="mb-4">
+                <button class="btn btn-sc-outline btn-sm"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#setLastListened">
+                    + Set last listened
+                </button>
+                <div class="collapse mt-2" id="setLastListened">
+                    <div class="card p-3">
+                        <form method="POST" action="/last-listened/set">
+                            <div class="mb-3">
+                                <label for="song_id" class="form-label">Song</label>
+                                <select name="song_id" id="song_id" class="form-select" required>
+                                    <option value="">Choose a song…</option>
+                                    <?php foreach ($vm->songs as $song): ?>
+                                        <option value="<?= (int) $song->id ?>">
+                                            <?= htmlspecialchars($song->title) ?> — <?= htmlspecialchars($song->artist) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="caption" class="form-label">Caption (optional)</label>
+                                <textarea name="caption" id="caption"
+                                          class="form-control" rows="2"
+                                          placeholder="What did you think?"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-sc-primary btn-sm">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Comments -->
+            <div id="comments-section">
+                <h3 class="sc-section-title">Comments</h3>
+
+                <ul id="comments-list" class="list-unstyled">
+                    <?php foreach ($vm->comments as $comment): ?>
+                    <li class="mb-3 p-3 bg-white rounded-3 shadow-sm">
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong><?= htmlspecialchars($comment->username) ?></strong>
+                            <small class="text-muted"><?= htmlspecialchars($comment->created_at) ?></small>
+                        </div>
+                        <p class="mb-0"><?= htmlspecialchars($comment->content) ?></p>
+                    </li>
+                    <?php endforeach; ?>
+                    <?php if (empty($vm->comments)): ?>
+                        <li id="no-comments" class="text-muted">No comments yet.</li>
+                    <?php endif; ?>
+                </ul>
+
+                <!-- Comment form: logged-in users who are NOT the profile owner -->
+                <?php if (isset($_SESSION['user_id']) && $vm->lastPost !== null && !$vm->isOwner): ?>
+                <form id="comment-form" class="mt-3" data-post-id="<?= (int) $vm->lastPost->id ?>">
                     <div class="mb-2">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-control"
-                               value="<?= htmlspecialchars($vm->user->username) ?>" required>
+                        <textarea id="comment-content"
+                                  class="form-control" rows="2"
+                                  placeholder="Add a comment…" required></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="bio" class="form-label">Bio</label>
-                        <textarea id="bio" name="bio" class="form-control"
-                                  rows="2"><?= htmlspecialchars($vm->user->bio ?? '') ?></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-sc-primary btn-sm w-100">Save</button>
+                    <button type="submit" class="btn btn-sc-primary btn-sm">Post</button>
                 </form>
+                <?php endif; ?>
             </div>
-        </div>
-        <?php endif; ?>
 
-        <!-- Favourite songs -->
-        <div class="mb-3">
-            <button class="btn btn-sc-outline btn-sm w-100 mb-2"
-                    data-bs-toggle="collapse" data-bs-target="#favSongs">
-                ★ Favourite Songs
-            </button>
-            <div class="collapse" id="favSongs">
-                <?php if (empty($vm->favorites)): ?>
-                    <p class="text-muted" style="font-size:0.85rem;padding:0.4rem 0">No favourites yet.</p>
-                <?php else: ?>
-                    <ul class="list-unstyled mb-0">
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div class="col-md-4">
+
+            <!-- Profile header -->
+            <div class="profile-header mb-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="profile-avatar">
+                        <?= htmlspecialchars(mb_strtoupper(mb_substr($vm->user->username, 0, 1))) ?>
+                    </div>
+                    <div>
+                        <h2 class="mb-0"><?= htmlspecialchars($vm->user->username) ?></h2>
+                        <small class="opacity-75"><?= htmlspecialchars($vm->user->role) ?></small>
+                    </div>
+                </div>
+                <?php if (!empty($vm->user->bio)): ?>
+                    <p class="mb-0 opacity-90"><?= htmlspecialchars($vm->user->bio) ?></p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Edit profile (owner only) -->
+            <?php if ($vm->isOwner): ?>
+            <div class="mb-3">
+                <button class="btn btn-sc-outline btn-sm w-100"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#editProfile">
+                    Edit profile
+                </button>
+                <div class="collapse mt-2" id="editProfile">
+                    <div class="card p-3">
+                        <form method="POST" action="/profile/update">
+                            <div class="mb-3">
+                                <label for="edit_username" class="form-label">Username</label>
+                                <input type="text" name="username" id="edit_username"
+                                       class="form-control"
+                                       value="<?= htmlspecialchars($vm->user->username) ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_bio" class="form-label">Bio</label>
+                                <textarea name="bio" id="edit_bio"
+                                          class="form-control" rows="3"><?= htmlspecialchars($vm->user->bio ?? '') ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-sc-primary btn-sm">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Favorites -->
+            <?php if (!empty($vm->favorites)): ?>
+            <div class="mb-3">
+                <button class="btn btn-fav btn-sm w-100"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#favSongs">
+                    ★ Favorites (<?= count($vm->favorites) ?>)
+                </button>
+                <div class="collapse mt-2" id="favSongs">
+                    <ul class="list-unstyled">
                         <?php foreach ($vm->favorites as $song): ?>
-                        <li style="padding:0.35rem 0;border-bottom:1px solid #eee;font-size:0.9rem">
-                            <a href="/songs/<?= (int) $song->id ?>" style="color:var(--sc-text)">
-                                <?= htmlspecialchars($song->title) ?>
-                            </a>
-                            <span style="color:var(--sc-text-muted);font-size:0.8rem">
-                                — <?= htmlspecialchars($song->artist) ?>
-                            </span>
-                        </li>
+                            <li class="mb-1">
+                                <a href="/songs/<?= (int) $song->id ?>"
+                                   style="color:inherit;text-decoration:none">
+                                    <?= htmlspecialchars($song->title) ?> — <?= htmlspecialchars($song->artist) ?>
+                                </a>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
-                <?php endif; ?>
+                </div>
             </div>
-        </div>
+            <?php endif; ?>
 
-        <!-- Liked songs (owner only) -->
-        <?php if ($vm->isOwner): ?>
-        <div class="mb-3">
-            <button class="btn btn-like btn-sm w-100 mb-2"
-                    data-bs-toggle="collapse" data-bs-target="#likedSongs">
-                ♥ Liked Songs
-            </button>
-            <div class="collapse" id="likedSongs">
-                <?php if (empty($vm->likes)): ?>
-                    <p class="text-muted" style="font-size:0.85rem;padding:0.4rem 0">No likes yet.</p>
-                <?php else: ?>
-                    <ul class="list-unstyled mb-0">
+            <!-- Liked songs (owner only) -->
+            <?php if ($vm->isOwner && !empty($vm->likes)): ?>
+            <div class="mb-3">
+                <button class="btn btn-like btn-sm w-100"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#likedSongs">
+                    ♥ Liked (<?= count($vm->likes) ?>)
+                </button>
+                <div class="collapse mt-2" id="likedSongs">
+                    <ul class="list-unstyled">
                         <?php foreach ($vm->likes as $song): ?>
-                        <li style="padding:0.35rem 0;border-bottom:1px solid #eee;font-size:0.9rem">
-                            <a href="/songs/<?= (int) $song->id ?>" style="color:var(--sc-text)">
-                                <?= htmlspecialchars($song->title) ?>
-                            </a>
-                            <span style="color:var(--sc-text-muted);font-size:0.8rem">
-                                — <?= htmlspecialchars($song->artist) ?>
-                            </span>
-                        </li>
+                            <li class="mb-1">
+                                <a href="/songs/<?= (int) $song->id ?>"
+                                   style="color:inherit;text-decoration:none">
+                                    <?= htmlspecialchars($song->title) ?> — <?= htmlspecialchars($song->artist) ?>
+                                </a>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
-                <?php endif; ?>
+                </div>
             </div>
-        </div>
-        <?php endif; ?>
+            <?php endif; ?>
 
+        </div>
     </div>
 </div>
 

@@ -7,6 +7,7 @@ class Post {
     public ?string $caption;
     public string $created_at;
 
+
     public function __construct($data = []) {
         foreach($data as $key => $value) {
             $this->$key = $value;
