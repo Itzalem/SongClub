@@ -1,87 +1,40 @@
-<?php
-$pageTitle = $isOwner
-    ? 'My Favorite Songs — SongClub'
-    : htmlspecialchars($profileUser->username) . "'s Favorites — SongClub";
-?>
+<?php $pageTitle = 'Mis Joyas — SongClub'; ?>
 <?php require __DIR__ . '/../Partials/header.php'; ?>
 
-<div class="d-flex align-items-center justify-content-between mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
     <div>
-        <a href="/profile/<?= (int)$profileUser->userId ?>"
-           class="back-link">&larr; Back to profile</a>
-        <h2 class="sc-section-title mb-0 mt-2">
-            <?= $isOwner ? 'My Favorite Songs' : htmlspecialchars($profileUser->username) . "'s Favorites" ?>
-        </h2>
+        <h2 class="fw-extrabold fs-1 mb-1">Favoritos ★</h2>
+        <p class="text-muted">Las canciones que más te inspiran.</p>
     </div>
-    <?php if ($isOwner): ?>
-        <a href="/songs/create" class="btn btn-sc-primary">+ Add a new song</a>
-    <?php endif; ?>
+    <div class="d-flex gap-2 mt-3 mt-md-0">
+        <a href="/api/favorites/<?= (int)$profileUser->userId ?>" class="btn btn-sc-outline btn-sm">Exportar JSON</a>
+        <?php if ($isOwner): ?>
+            <a href="/songs/create" class="btn btn-sc-primary btn-sm">+ Nueva</a>
+        <?php endif; ?>
+    </div>
 </div>
 
-<?php if (empty($songs)): ?>
-    <p class="text-muted">
-        <?= $isOwner ? 'You haven\'t added any favorites yet.' : 'No favorites yet.' ?>
-    </p>
-<?php else: ?>
-    <div class="song-list">
-        <?php foreach ($songs as $i => $song): ?>
-        <div class="song-list-item">
-
-            <!-- Collapsed row -->
-            <div class="song-list-row"
-                 data-bs-toggle="collapse"
-                 data-bs-target="#song-details-<?= (int)$song->id ?>-<?= $i ?>"
-                 style="cursor:pointer">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <div class="song-list-info flex-grow-1">
-                        <span class="song-list-title"><?= htmlspecialchars($song->title) ?></span>
-                        <span class="song-list-sep">—</span>
-                        <span class="song-list-artist"><?= htmlspecialchars($song->artist) ?></span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                        <?php if (!empty($song->link)): ?>
-                            <a href="<?= htmlspecialchars($song->link) ?>"
-                               target="_blank" rel="noopener noreferrer"
-                               class="btn btn-sc-outline btn-sm"
-                               onclick="event.stopPropagation()">▶ Listen</a>
-                        <?php endif; ?>
-                        <?php if (!$isOwner && isset($_SESSION['user_id'])): ?>
-                            <button class="btn btn-like btn-sm <?= in_array($song->id, $viewerLikedIds) ? 'active' : '' ?>"
-                                    data-song-id="<?= (int)$song->id ?>"
-                                    onclick="event.stopPropagation()">♥</button>
-                            <button class="btn btn-fav btn-sm <?= in_array($song->id, $viewerFavIds) ? 'active' : '' ?>"
-                                    data-song-id="<?= (int)$song->id ?>"
-                                    onclick="event.stopPropagation()">★</button>
-                        <?php endif; ?>
-                        <span class="song-list-chevron">›</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Expanded details -->
-            <div class="collapse song-list-details"
-                 id="song-details-<?= (int)$song->id ?>-<?= $i ?>">
-                <div class="song-list-body">
-                    <?php if (!empty($song->genre)): ?>
-                        <span class="badge-genre mb-2 d-inline-block">
-                            <?= htmlspecialchars($song->genre) ?>
-                        </span>
-                    <?php endif; ?>
-                    <?php if (!empty($song->album)): ?>
-                        <p class="mb-1">
-                            <span class="song-detail-label">Album:</span>
-                            <?= htmlspecialchars($song->album) ?>
-                        </p>
-                    <?php endif; ?>
-                    <?php if (empty($song->genre) && empty($song->album)): ?>
-                        <p class="text-muted small mb-0">No additional details available.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
+<div class="song-list">
+    <?php foreach ($songs as $song): ?>
+    <div class="song-list-item p-3 mb-2 shadow-sm bg-white rounded-4 border-0 d-flex align-items-center">
+        <div class="flex-grow-1">
+            <h6 class="fw-bold mb-0 text-olive"><?= htmlspecialchars($song->title) ?></h6>
+            <small class="text-muted"><?= htmlspecialchars($song->artist) ?></small>
         </div>
-        <?php endforeach; ?>
+        <div class="d-flex gap-2">
+            <?php if ($song->link): ?>
+                <a href="<?= htmlspecialchars($song->link) ?>" target="_blank" class="btn btn-light btn-sm rounded-circle shadow-sm">▶</a>
+            <?php endif; ?>
+            <button class="btn btn-fav active btn-sm rounded-circle shadow-sm" data-song-id="<?= (int)$song->id ?>">★</button>
+        </div>
     </div>
-<?php endif; ?>
+    <?php endforeach; ?>
+    <?php if (empty($songs)): ?>
+        <div class="text-center py-5 opacity-25">
+            <span class="display-1">🌑</span>
+            <p class="fs-4 mt-3">Aún no hay favoritos aquí.</p>
+        </div>
+    <?php endif; ?>
+</div>
 
 <?php require __DIR__ . '/../Partials/footer.php'; ?>

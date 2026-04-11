@@ -1,331 +1,272 @@
 /* =====================================================
-   SongClub — Main Stylesheet
+   SongClub — Modern Social UI Stylesheet
    ===================================================== */
+
+/* 1. Importación de fuente moderna (Plus Jakarta Sans) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --sc-olive:        #3a4a28;
+    /* Paleta refinada basada en tus colores originales */
+    --sc-olive:        #3a4a28;        /* Color principal */
     --sc-olive-light:  #4e6235;
+    --sc-olive-soft:   #f0f4eb;        /* Para fondos de badges/secciones */
+    --sc-accent:       #e8d85a;        /* Amarillo vibrante */
+    --sc-cream:        #fdfcf9;        /* Fondo cálido premium */
     --sc-blue:         #4a6fa5;
-    --sc-blue-light:   #dde8f5;
-    --sc-cream:        #f5f0e8;
-    --sc-yellow:       #e8d85a;
-    --sc-text:         #1e2a16;
-    --sc-text-muted:   #6b7280;
-    --sc-bg:           #f8f9fa;
-    --sc-card-bg:      #ffffff;
-    --sc-radius:       12px;
-    --sc-radius-pill:  50px;
-    --sc-shadow:       0 4px 16px rgba(0,0,0,0.08);
-    --sc-shadow-hover: 0 8px 28px rgba(0,0,0,0.14);
-    --sc-transition:   0.2s ease;
+    --sc-text:         #1a1d17;        /* Casi negro para legibilidad */
+    --sc-text-muted:   #64748b;
+    
+    /* Variables de diseño moderno */
+    --sc-radius:       1.25rem;        /* 20px - Bordes suaves */
+    --sc-radius-sm:    0.75rem;
+    --sc-shadow:       0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    --sc-shadow-lg:    0 20px 25px -5px rgba(58, 74, 40, 0.1);
+    --sc-transition:   cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
 }
 
+/* 2. Estilos Generales */
 body {
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background-color: var(--sc-bg);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--sc-cream);
     color: var(--sc-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Navbar */
-.navbar { background-color: var(--sc-olive) !important; padding: 0.75rem 0; }
-.navbar-brand { font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; color: var(--sc-cream) !important; }
-.navbar .nav-link { color: rgba(245,240,232,0.85) !important; font-weight: 500; transition: color var(--sc-transition); padding: 0.4rem 0.8rem; border-radius: var(--sc-radius-pill); }
-.navbar .nav-link:hover, .navbar .nav-link:focus { color: var(--sc-cream) !important; background-color: rgba(255,255,255,0.1); }
-
-/* Navbar search */
-.navbar-search-wrapper { position: relative; }
-#user-search { border-radius: var(--sc-radius-pill); border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #fff; padding: 0.35rem 1rem; font-size: 0.875rem; width: 200px; transition: all var(--sc-transition); }
-#user-search::placeholder { color: rgba(255,255,255,0.5); }
-#user-search:focus { outline: none; border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); width: 240px; }
-#search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border-radius: var(--sc-radius); box-shadow: var(--sc-shadow-hover); z-index: 1000; overflow: hidden; min-width: 240px; }
-#search-results a { display: block; padding: 0.6rem 1rem; color: var(--sc-text); text-decoration: none; font-size: 0.875rem; transition: background var(--sc-transition); }
-#search-results a:hover { background: var(--sc-blue-light); }
-
-/* Buttons */
-.btn { border-radius: var(--sc-radius-pill); font-weight: 600; transition: all var(--sc-transition); }
-.btn-sc-primary { background-color: var(--sc-olive); color: var(--sc-cream); border: none; padding: 0.55rem 1.5rem; }
-.btn-sc-primary:hover, .btn-sc-primary:focus { background-color: var(--sc-olive-light); color: var(--sc-cream); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(58,74,40,0.3); }
-.btn-sc-primary:active { transform: scale(0.97); }
-.btn-sc-outline { background: transparent; color: var(--sc-olive); border: 2px solid var(--sc-olive); padding: 0.5rem 1.4rem; }
-.btn-sc-outline:hover { background: var(--sc-olive); color: var(--sc-cream); }
-
-/* Song cards */
-.song-card { background: var(--sc-card-bg); border-radius: var(--sc-radius); box-shadow: var(--sc-shadow); border: none; transition: transform var(--sc-transition), box-shadow var(--sc-transition); overflow: hidden; }
-.song-card:hover { transform: translateY(-4px); box-shadow: var(--sc-shadow-hover); }
-.song-card .card-body { padding: 1.25rem; }
-.song-card .song-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; color: var(--sc-text); }
-.song-card .song-artist { color: var(--sc-text-muted); font-size: 0.875rem; margin-bottom: 0.75rem; }
-.song-card .badge-genre { background: var(--sc-blue-light); color: var(--sc-blue); border-radius: var(--sc-radius-pill); font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.75rem; }
-
-/* Like / Fav buttons */
-.btn-like, .btn-fav { border-radius: var(--sc-radius-pill); font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.9rem; border: 1.5px solid; transition: background-color var(--sc-transition), color var(--sc-transition), transform 0.1s ease; }
-.btn-like { border-color: #e07070; color: #e07070; background: transparent; }
-.btn-like:hover, .btn-like.active { background-color: #e07070; color: #fff; }
-.btn-like:active { transform: scale(0.93); }
-.btn-fav { border-color: var(--sc-olive); color: var(--sc-olive); background: transparent; }
-.btn-fav:hover, .btn-fav.active { background-color: var(--sc-olive); color: var(--sc-cream); }
-.btn-fav:active { transform: scale(0.93); }
-
-/* Forms */
-.form-control, .form-select { border-radius: var(--sc-radius-pill); border: 1.5px solid #d1d5db; padding: 0.6rem 1.1rem; font-size: 0.95rem; transition: border-color var(--sc-transition), box-shadow var(--sc-transition); }
-textarea.form-control { border-radius: var(--sc-radius); }
-.form-control:focus, .form-select:focus { border-color: var(--sc-olive); box-shadow: 0 0 0 3px rgba(58,74,40,0.12); }
-.form-label { font-weight: 600; font-size: 0.875rem; color: var(--sc-text); margin-bottom: 0.35rem; }
-
-/* Auth pages */
-.auth-wrapper { min-height: 80vh; display: flex; align-items: center; justify-content: center; }
-.auth-card { background: var(--sc-card-bg); border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); padding: 2.5rem 2rem; width: 100%; max-width: 420px; }
-.auth-card h1 { font-weight: 800; font-size: 1.75rem; color: var(--sc-text); margin-bottom: 0.25rem; }
-.auth-card .subtitle { color: var(--sc-text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; }
-
-/* Hero */
-.sc-hero { background: linear-gradient(135deg, var(--sc-blue) 0%, #3a5a8a 100%); color: #fff; padding: 4rem 0 3rem; margin-bottom: 2.5rem; }
-.sc-hero h1 { font-weight: 800; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; color: var(--sc-yellow); }
-.sc-hero p { font-size: 1.1rem; opacity: 0.9; max-width: 480px; }
-
-/* Section titles */
-.sc-section-title { font-weight: 700; font-size: 1.35rem; color: var(--sc-text); margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--sc-blue-light); }
-
-/* Profile */
-.profile-header { background: var(--sc-olive); color: var(--sc-cream); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
-.profile-header h2 { font-weight: 800; font-size: 1.8rem; color: var(--sc-yellow); }
-.profile-avatar { width: 72px; height: 72px; background: var(--sc-yellow); color: var(--sc-olive); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; }
-
-/* =====================================================
-   Landing page
-   ===================================================== */
-.landing-body {
-    min-height: 100vh;
-    background: linear-gradient(145deg, var(--sc-olive) 0%, #1e2d10 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* 3. Navbar Estilo Glassmorphism */
+.navbar {
+    background: rgba(58, 74, 40, 0.96) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
-.landing-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-}
-.landing-card {
-    max-width: 480px;
-    width: 100%;
-}
-.landing-logo {
-    font-size: clamp(3rem, 10vw, 5rem);
-    font-weight: 900;
-    color: var(--sc-yellow);
-    letter-spacing: -0.03em;
-    line-height: 1;
-    margin-bottom: 0.5rem;
-}
-.landing-tagline {
-    font-size: 1.2rem;
-    color: rgba(245,240,232,0.85);
-    margin-bottom: 2.5rem;
-    font-weight: 400;
-}
-.btn-sc-landing {
-    background: var(--sc-yellow);
-    color: var(--sc-olive);
-    border: none;
+
+.navbar-brand {
     font-weight: 800;
-    font-size: 1.1rem;
-    padding: 0.75rem 2.5rem;
-    border-radius: var(--sc-radius-pill);
-    transition: all var(--sc-transition);
-    display: inline-block;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    color: var(--sc-accent) !important;
 }
-.btn-sc-landing:hover {
-    background: #f0e240;
-    color: var(--sc-olive);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(232,216,90,0.4);
-}
-.landing-sub {
-    color: rgba(245,240,232,0.55);
-    font-size: 0.9rem;
-    margin-top: 1.25rem;
-    margin-bottom: 0;
-}
-.landing-link {
-    color: rgba(245,240,232,0.85);
-    font-weight: 600;
-}
-.landing-link:hover { color: var(--sc-yellow); }
 
-/* =====================================================
-   Post card (home / feed view)
-   ===================================================== */
+.navbar .nav-link {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8) !important;
+    transition: var(--sc-transition);
+    padding: 0.5rem 1rem !important;
+}
+
+.navbar .nav-link:hover {
+    color: var(--sc-accent) !important;
+    transform: translateY(-1px);
+}
+
+/* Buscador integrado en la barra */
+#user-search {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.3s;
+}
+
+#user-search:focus {
+    background: white;
+    color: var(--sc-olive);
+    box-shadow: 0 0 0 4px rgba(232, 216, 90, 0.3);
+}
+
+/* 4. Botones con Elevación */
+.btn {
+    border-radius: 12px;
+    padding: 0.7rem 1.6rem;
+    font-weight: 700;
+    transition: var(--sc-transition);
+}
+
+.btn-sc-primary {
+    background: var(--sc-olive);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(58, 74, 40, 0.2);
+}
+
+.btn-sc-primary:hover {
+    background: var(--sc-olive-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(58, 74, 40, 0.3);
+    color: white;
+}
+
+.btn-sc-outline {
+    border: 2px solid var(--sc-olive);
+    color: var(--sc-olive);
+    background: transparent;
+}
+
+.btn-sc-outline:hover {
+    background: var(--sc-olive);
+    color: white;
+}
+
+/* 5. Post Cards (Muro Social) */
 .post-card {
-    background: var(--sc-card-bg);
+    background: white;
     border-radius: var(--sc-radius);
+    border: 1px solid rgba(0,0,0,0.04);
     box-shadow: var(--sc-shadow);
     overflow: hidden;
-}
-.post-card-body {
-    padding: 1.5rem 1.5rem 1.25rem;
-}
-.post-song-title {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--sc-text);
-    margin-bottom: 0.15rem;
-}
-.post-song-artist {
-    color: var(--sc-text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-.post-song-album {
-    font-size: 0.85rem;
-    color: var(--sc-text-muted);
-    margin-bottom: 0.5rem;
-}
-.post-caption {
-    font-style: italic;
-    color: var(--sc-text);
-    margin-top: 0.75rem;
-    font-size: 0.95rem;
-}
-.post-card-comments {
-    border-top: 1px solid #f0ebe0;
-    padding: 1.25rem 1.5rem 1.25rem;
-    background: #faf8f4;
-}
-.comments-label {
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--sc-text-muted);
-    margin-bottom: 0.75rem;
-}
-.comment-item {
-    padding: 0.6rem 0.75rem;
-    background: #fff;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-.comment-author { color: var(--sc-olive); }
-.post-form-card {
-    background: #fff;
-    border-radius: var(--sc-radius);
-    padding: 1.25rem;
-    box-shadow: var(--sc-shadow);
-}
-.post-empty-state {
-    padding: 2rem;
-    background: var(--sc-card-bg);
-    border-radius: var(--sc-radius);
-    text-align: center;
+    transition: var(--sc-transition);
 }
 
-/* =====================================================
-   Profile sidebar card (home view right column)
-   ===================================================== */
-.sidebar-profile-card {
-    background: var(--sc-olive);
-    color: var(--sc-cream);
-    border-radius: var(--sc-radius);
+.post-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--sc-shadow-lg);
+}
+
+.post-song-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--sc-olive);
+    margin-bottom: 0.2rem;
+}
+
+.post-song-artist {
+    font-weight: 600;
+    color: var(--sc-text-muted);
+}
+
+.post-caption {
+    background: var(--sc-olive-soft);
+    padding: 1rem;
+    border-radius: var(--sc-radius-sm);
+    border-left: 5px solid var(--sc-accent);
+    font-style: italic;
+    color: var(--sc-olive);
+    margin: 1.5rem 0;
+}
+
+/* 6. Sección de Comentarios */
+.post-card-comments {
+    background: #fafaf9;
+    border-top: 1px solid #f1f1f0;
     padding: 1.5rem;
 }
-.text-sc-cream { color: var(--sc-cream) !important; }
 
-/* =====================================================
-   Song list (favorites / liked pages)
-   ===================================================== */
-.song-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.song-list-item {
-    background: var(--sc-card-bg);
-    border-radius: var(--sc-radius);
-    box-shadow: var(--sc-shadow);
-    overflow: hidden;
-    transition: box-shadow var(--sc-transition);
+.comment-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    border: 1px solid #f0f0ef;
 }
-.song-list-item:hover { box-shadow: var(--sc-shadow-hover); }
-.song-list-row { padding: 0.9rem 1.1rem; }
-.song-list-row:hover { background: #faf8f4; }
-.song-list-title { font-weight: 700; color: var(--sc-text); font-size: 0.95rem; }
-.song-list-sep { color: var(--sc-text-muted); margin: 0 0.3rem; }
-.song-list-artist { color: var(--sc-text-muted); font-size: 0.875rem; }
-.song-list-chevron {
-    color: var(--sc-text-muted);
-    font-size: 1.2rem;
-    transition: transform var(--sc-transition);
-    line-height: 1;
-}
-.song-list-details.show + .song-list-row .song-list-chevron,
-.song-list-row[aria-expanded="true"] .song-list-chevron { transform: rotate(90deg); }
-.song-list-body {
-    padding: 0.75rem 1.1rem 1rem;
-    border-top: 1px solid #f0ebe0;
-    background: #faf8f4;
-    font-size: 0.875rem;
-}
-.song-detail-label { font-weight: 600; color: var(--sc-text-muted); margin-right: 0.3rem; }
 
-/* =====================================================
-   Profile view page (/user/{id})
-   ===================================================== */
-.profile-view-card {
-    background: var(--sc-card-bg);
-    border-radius: 20px;
-    box-shadow: var(--sc-shadow);
-    padding: 2rem 2rem 1.75rem;
-}
-.profile-avatar-lg {
-    width: 96px;
-    height: 96px;
-    background: var(--sc-yellow);
+.comment-author {
     color: var(--sc-olive);
-    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* 7. Perfil Sidebar Card */
+.sidebar-profile-card {
+    background: white;
+    border-radius: var(--sc-radius);
+    padding: 2rem;
+    text-align: center;
+    box-shadow: var(--sc-shadow);
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: var(--sc-accent);
+    color: var(--sc-olive);
+    font-size: 2.2rem;
+    font-weight: 800;
+    border-radius: 24px; /* Estilo Squircle */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 900;
-    flex-shrink: 0;
-}
-.profile-view-name { font-weight: 800; font-size: 1.75rem; color: var(--sc-text); }
-.profile-view-bio { color: var(--sc-text); font-size: 0.95rem; }
-.profile-view-field {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: var(--sc-text);
-}
-.profile-view-label {
-    font-weight: 600;
-    color: var(--sc-text-muted);
-    min-width: 56px;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 16px rgba(232, 216, 90, 0.4);
 }
 
-/* Back link */
-.back-link {
+/* 8. Estilo de Listas de Canciones (Favoritos) */
+.song-list-item {
+    background: white;
+    margin-bottom: 0.8rem;
+    border-radius: 15px;
+    border: 1px solid #f0f0ef;
+    transition: all 0.2s;
+}
+
+.song-list-item:hover {
+    border-color: var(--sc-olive);
+    background: var(--sc-olive-soft);
+}
+
+.song-list-title {
+    font-weight: 700;
     color: var(--sc-olive);
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
 }
-.back-link:hover { color: var(--sc-olive-light); text-decoration: underline; }
 
-/* Footer */
-footer { background: var(--sc-olive); color: rgba(245,240,232,0.7); padding: 1.5rem 0; font-size: 0.875rem; }
-footer a { color: rgba(245,240,232,0.85); }
-footer a:hover { color: var(--sc-yellow); }
+/* 9. Badges de Género Estilizados */
+.badge-genre {
+    background: var(--sc-olive-soft);
+    color: var(--sc-olive);
+    font-weight: 800;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    display: inline-block;
+}
 
-/* Alerts */
-.alert { border-radius: var(--sc-radius); border: none; font-weight: 500; }
+/* 10. Forms Modernos */
+.form-control, .form-select {
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    padding: 0.75rem 1.2rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--sc-olive);
+    box-shadow: 0 0 0 4px rgba(58, 74, 40, 0.1);
+}
+
+/* 11. Landing Page */
+.landing-body {
+    background: radial-gradient(circle at top right, #4e6235, #3a4a28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.landing-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4rem 2rem;
+    border-radius: 32px;
+    color: white;
+}
+
+.landing-logo {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--sc-accent);
+    text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
 
 /* Responsive */
-@media (max-width: 576px) {
-    .auth-card { padding: 1.75rem 1.25rem; }
-    .sc-hero { padding: 2.5rem 0 2rem; }
-    #user-search { width: 140px; }
-    #user-search:focus { width: 160px; }
+@media (max-width: 768px) {
+    .navbar-brand { font-size: 1.2rem; }
+    .post-song-title { font-size: 1.2rem; }
 }
