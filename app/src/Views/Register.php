@@ -1,5 +1,5 @@
 <?php $pageTitle = 'Sign up'; ?>
-<?php require __DIR__ . '/../partials/header.php'; ?>
+<?php require __DIR__ . '/Partials/header.php'; ?>
 
 <div class="row justify-content-center">
     <div class="col-md-5">
@@ -35,4 +35,4 @@
     </div>
 </div>
 
-<?php require __DIR__ . '/../partials/footer.php'; ?>
+<?php require __DIR__ . '/Partials/footer.php'; ?>

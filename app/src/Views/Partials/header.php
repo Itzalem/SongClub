@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
         <a class="navbar-brand fw-bold" href="/">SongClub</a>
 
@@ -19,7 +19,11 @@
 
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile/<?= (int)$_SESSION['user_id'] ?>">Home</a>
+                    </li>
+                <?php endif; ?>
                 <li class="nav-item"><a class="nav-link" href="/songs">Songs</a></li>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                     <li class="nav-item"><a class="nav-link" href="/admin/users">Admin</a></li>
@@ -27,7 +31,7 @@
             </ul>
 
             <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="me-3 position-relative">
+                <div class="me-3 position-relative navbar-search-wrapper">
                     <input type="search" id="user-search" class="form-control form-control-sm"
                            placeholder="Search users...">
                     <div id="search-results" class="position-absolute bg-white shadow rounded w-100"
@@ -38,7 +42,7 @@
             <ul class="navbar-nav">
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="/profile/<?= (int)$_SESSION['user_id'] ?>">
+                        <a class="nav-link" href="/user/<?= (int)$_SESSION['user_id'] ?>">
                             <?= htmlspecialchars($_SESSION['username']) ?>
                         </a>
                     </li>

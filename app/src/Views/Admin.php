@@ -1,5 +1,5 @@
 <?php $pageTitle = 'Admin — Users'; ?>
-<?php require __DIR__ . '/../partials/header.php'; ?>
+<?php require __DIR__ . '/Partials/header.php'; ?>
 
 <div class="container py-4">
 
@@ -63,4 +63,4 @@
 
 </div>
 
-<?php require __DIR__ . '/../partials/footer.php'; ?>
+<?php require __DIR__ . '/Partials/footer.php'; ?>

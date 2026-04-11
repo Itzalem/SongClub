@@ -1,5 +1,5 @@
 <?php $pageTitle = 'Edit Song — SongClub'; ?>
-<?php require __DIR__ . '/../partials/header.php'; ?>
+<?php require __DIR__ . '/../Partials/header.php'; ?>
 
 <a href="/songs/<?= (int) $song->id ?>" style="color:var(--sc-olive);font-size:0.9rem">&larr; Back</a>
 
@@ -47,4 +47,4 @@
     </form>
 </div>
 
-<?php require __DIR__ . '/../partials/footer.php'; ?>
+<?php require __DIR__ . '/../Partials/footer.php'; ?>

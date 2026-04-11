@@ -1,5 +1,5 @@
 <?php $pageTitle = 'SongClub — Songs'; ?>
-<?php require __DIR__ . '/../partials/header.php'; ?>
+<?php require __DIR__ . '/Partials/header.php'; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="sc-section-title mb-0">Songs</h2>
@@ -63,4 +63,4 @@
     </div>
 <?php endif; ?>
 
-<?php require __DIR__ . '/../partials/footer.php'; ?>
+<?php require __DIR__ . '/Partials/footer.php'; ?>

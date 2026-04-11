@@ -75,6 +75,12 @@ class UserService implements IUserService
         return $this->userRepository->updateUser($user);
     }
 
+    public function changePassword(int $userId, string $newPassword): void
+    {
+        $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+        $this->userRepository->updatePasswordHash($userId, $hash);
+    }
+
     public function deleteUser(int $id): void
     {
         $this->userRepository->deleteUser($id);

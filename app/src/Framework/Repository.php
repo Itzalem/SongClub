@@ -1,12 +1,12 @@
 <?php
 
-namespace app\Framework; 
+namespace App\Framework;
 
-use app\Config; 
+use App\Config;
 use PDO;        
 use PDOException;
 
-abstract class Repository 
+abstract class Repository
 {
     private ?PDO $connection = null; 
 

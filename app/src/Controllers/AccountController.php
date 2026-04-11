@@ -8,10 +8,21 @@ use App\Repositories\UserRepository;
 
 class AccountController extends Controller
 {
+    // GET / — landing page; redirect to home if already logged in
+    public function landing(array $vars = []): void
+    {
+        if (isset($_SESSION['user_id'])) {
+            header('Location: /profile/' . (int) $_SESSION['user_id']);
+            exit;
+        }
+
+        $this->render('Landing', []);
+    }
+
     public function login(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
-            header('Location: /');
+            header('Location: /profile/' . (int) $_SESSION['user_id']);
             exit;
         }
 
@@ -31,7 +42,7 @@ class AccountController extends Controller
                     $_SESSION['user_id']  = $user->userId;
                     $_SESSION['username'] = $user->username;
                     $_SESSION['role']     = $user->role;
-                    header('Location: /');
+                    header('Location: /profile/' . (int) $user->userId);
                     exit;
                 } else {
                     $error = 'Invalid email or password.';
@@ -45,7 +56,7 @@ class AccountController extends Controller
     public function register(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
-            header('Location: /');
+            header('Location: /profile/' . (int) $_SESSION['user_id']);
             exit;
         }
 
@@ -63,7 +74,7 @@ class AccountController extends Controller
                 $_SESSION['user_id']  = $userId;
                 $_SESSION['username'] = trim($_POST['username'] ?? '');
                 $_SESSION['role']     = 'user';
-                header('Location: /');
+                header('Location: /profile/' . (int) $userId);
                 exit;
             } catch (\InvalidArgumentException $e) {
                 $error = $e->getMessage();

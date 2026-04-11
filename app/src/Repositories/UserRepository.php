@@ -117,7 +117,7 @@ class UserRepository extends Repository implements IUserRepository
     public function updateUser(User $user): int
     {
         $sql = "UPDATE users
-                SET username = :username, bio = :bio
+                SET username = :username, bio = :bio, email = :email
                 WHERE id = :id";
 
         $connection = $this->getConnection();
@@ -125,11 +125,22 @@ class UserRepository extends Repository implements IUserRepository
 
         $statement->bindParam(':username', $user->username);
         $statement->bindParam(':bio',      $user->bio);
+        $statement->bindParam(':email',    $user->email);
         $statement->bindParam(':id',       $user->userId, PDO::PARAM_INT);
 
         $statement->execute();
 
         return $user->userId;
+    }
+
+    public function updatePasswordHash(int $userId, string $hash): void
+    {
+        $sql        = "UPDATE users SET password = :password WHERE id = :id";
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':password', $hash);
+        $statement->bindParam(':id',       $userId, PDO::PARAM_INT);
+        $statement->execute();
     }
 
     public function deleteUser(int $id): void

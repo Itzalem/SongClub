@@ -91,6 +91,229 @@ textarea.form-control { border-radius: var(--sc-radius); }
 .profile-header h2 { font-weight: 800; font-size: 1.8rem; color: var(--sc-yellow); }
 .profile-avatar { width: 72px; height: 72px; background: var(--sc-yellow); color: var(--sc-olive); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; }
 
+/* =====================================================
+   Landing page
+   ===================================================== */
+.landing-body {
+    min-height: 100vh;
+    background: linear-gradient(145deg, var(--sc-olive) 0%, #1e2d10 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.landing-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+.landing-card {
+    max-width: 480px;
+    width: 100%;
+}
+.landing-logo {
+    font-size: clamp(3rem, 10vw, 5rem);
+    font-weight: 900;
+    color: var(--sc-yellow);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+.landing-tagline {
+    font-size: 1.2rem;
+    color: rgba(245,240,232,0.85);
+    margin-bottom: 2.5rem;
+    font-weight: 400;
+}
+.btn-sc-landing {
+    background: var(--sc-yellow);
+    color: var(--sc-olive);
+    border: none;
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 0.75rem 2.5rem;
+    border-radius: var(--sc-radius-pill);
+    transition: all var(--sc-transition);
+    display: inline-block;
+}
+.btn-sc-landing:hover {
+    background: #f0e240;
+    color: var(--sc-olive);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(232,216,90,0.4);
+}
+.landing-sub {
+    color: rgba(245,240,232,0.55);
+    font-size: 0.9rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0;
+}
+.landing-link {
+    color: rgba(245,240,232,0.85);
+    font-weight: 600;
+}
+.landing-link:hover { color: var(--sc-yellow); }
+
+/* =====================================================
+   Post card (home / feed view)
+   ===================================================== */
+.post-card {
+    background: var(--sc-card-bg);
+    border-radius: var(--sc-radius);
+    box-shadow: var(--sc-shadow);
+    overflow: hidden;
+}
+.post-card-body {
+    padding: 1.5rem 1.5rem 1.25rem;
+}
+.post-song-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--sc-text);
+    margin-bottom: 0.15rem;
+}
+.post-song-artist {
+    color: var(--sc-text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.post-song-album {
+    font-size: 0.85rem;
+    color: var(--sc-text-muted);
+    margin-bottom: 0.5rem;
+}
+.post-caption {
+    font-style: italic;
+    color: var(--sc-text);
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+}
+.post-card-comments {
+    border-top: 1px solid #f0ebe0;
+    padding: 1.25rem 1.5rem 1.25rem;
+    background: #faf8f4;
+}
+.comments-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sc-text-muted);
+    margin-bottom: 0.75rem;
+}
+.comment-item {
+    padding: 0.6rem 0.75rem;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.comment-author { color: var(--sc-olive); }
+.post-form-card {
+    background: #fff;
+    border-radius: var(--sc-radius);
+    padding: 1.25rem;
+    box-shadow: var(--sc-shadow);
+}
+.post-empty-state {
+    padding: 2rem;
+    background: var(--sc-card-bg);
+    border-radius: var(--sc-radius);
+    text-align: center;
+}
+
+/* =====================================================
+   Profile sidebar card (home view right column)
+   ===================================================== */
+.sidebar-profile-card {
+    background: var(--sc-olive);
+    color: var(--sc-cream);
+    border-radius: var(--sc-radius);
+    padding: 1.5rem;
+}
+.text-sc-cream { color: var(--sc-cream) !important; }
+
+/* =====================================================
+   Song list (favorites / liked pages)
+   ===================================================== */
+.song-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.song-list-item {
+    background: var(--sc-card-bg);
+    border-radius: var(--sc-radius);
+    box-shadow: var(--sc-shadow);
+    overflow: hidden;
+    transition: box-shadow var(--sc-transition);
+}
+.song-list-item:hover { box-shadow: var(--sc-shadow-hover); }
+.song-list-row { padding: 0.9rem 1.1rem; }
+.song-list-row:hover { background: #faf8f4; }
+.song-list-title { font-weight: 700; color: var(--sc-text); font-size: 0.95rem; }
+.song-list-sep { color: var(--sc-text-muted); margin: 0 0.3rem; }
+.song-list-artist { color: var(--sc-text-muted); font-size: 0.875rem; }
+.song-list-chevron {
+    color: var(--sc-text-muted);
+    font-size: 1.2rem;
+    transition: transform var(--sc-transition);
+    line-height: 1;
+}
+.song-list-details.show + .song-list-row .song-list-chevron,
+.song-list-row[aria-expanded="true"] .song-list-chevron { transform: rotate(90deg); }
+.song-list-body {
+    padding: 0.75rem 1.1rem 1rem;
+    border-top: 1px solid #f0ebe0;
+    background: #faf8f4;
+    font-size: 0.875rem;
+}
+.song-detail-label { font-weight: 600; color: var(--sc-text-muted); margin-right: 0.3rem; }
+
+/* =====================================================
+   Profile view page (/user/{id})
+   ===================================================== */
+.profile-view-card {
+    background: var(--sc-card-bg);
+    border-radius: 20px;
+    box-shadow: var(--sc-shadow);
+    padding: 2rem 2rem 1.75rem;
+}
+.profile-avatar-lg {
+    width: 96px;
+    height: 96px;
+    background: var(--sc-yellow);
+    color: var(--sc-olive);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+.profile-view-name { font-weight: 800; font-size: 1.75rem; color: var(--sc-text); }
+.profile-view-bio { color: var(--sc-text); font-size: 0.95rem; }
+.profile-view-field {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--sc-text);
+}
+.profile-view-label {
+    font-weight: 600;
+    color: var(--sc-text-muted);
+    min-width: 56px;
+}
+
+/* Back link */
+.back-link {
+    color: var(--sc-olive);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.back-link:hover { color: var(--sc-olive-light); text-decoration: underline; }
+
 /* Footer */
 footer { background: var(--sc-olive); color: rgba(245,240,232,0.7); padding: 1.5rem 0; font-size: 0.875rem; }
 footer a { color: rgba(245,240,232,0.85); }
