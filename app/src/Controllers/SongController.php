@@ -24,7 +24,7 @@ class SongController extends Controller
             $favIds     = $favService->getFavoriteIds((int) $_SESSION['user_id']);
         }
 
-        $this->render('songs/index', [
+        $this->render('Index', [
             'songs'    => $songs,
             'likedIds' => $likedIds,
             'favIds'   => $favIds,
@@ -53,7 +53,7 @@ class SongController extends Controller
             $isFav   = $repo->has((int) $_SESSION['user_id'], $song->id, ESongType::FAVORITE);
         }
 
-        $this->render('songs/show', [
+        $this->render('Songs/Show', [
             'song'      => $song,
             'likeCount' => $likeCount,
             'isLiked'   => $isLiked,
@@ -80,7 +80,7 @@ class SongController extends Controller
             }
         }
 
-        $this->render('songs/create', ['error' => $error]);
+        $this->render('Songs/CreateSong', ['error' => $error]);
     }
 
     public function edit(array $vars = []): void
@@ -115,7 +115,7 @@ class SongController extends Controller
             }
         }
 
-        $this->render('songs/edit', ['song' => $song, 'error' => $error]);
+        $this->render('Songs/EditSong', ['song' => $song, 'error' => $error]);
     }
 
     public function delete(array $vars = []): void
@@ -132,10 +132,10 @@ class SongController extends Controller
         exit;
     }
 
-    // API
+    // API — returns all songs as JSON
     public function apiIndex(array $vars = []): void
     {
-        $songs  = (new SongRepository())->findAll();
+        $songs  = (new SongService(new SongRepository()))->getAll();
         $result = [];
         foreach ($songs as $s) {
             $result[] = [

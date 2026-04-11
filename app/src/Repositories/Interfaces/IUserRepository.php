@@ -12,6 +12,6 @@ interface IUserRepository
     public function getAllUsers(): array;
     public function searchUser(string $query): array;
     public function createUser(User $user): int;
-    public function updateUser(User $user): bool;
+    public function updateUser(User $user): int;
     public function deleteUser(int $id): void;
 }

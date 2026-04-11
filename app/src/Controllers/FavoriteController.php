@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Framework\Controller;
 use App\Services\FavoriteService;
 use App\Repositories\InteractionRepository;
+use App\Models\ESongType;
 
 class FavoriteController extends Controller
 {

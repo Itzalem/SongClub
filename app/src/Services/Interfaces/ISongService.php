@@ -1,17 +1,14 @@
 <?php
 
-namespace app\src\Services\Interfaces;
+namespace App\Services\Interfaces;
 
-use app\Models\User;
-use app\Models\ESongType;
-use app\Models\Song;
+use App\Models\Song;
 
 interface ISongService
 {
-    public function getSongsByUser(User $user, ESongType $songType): array;
-    public function getAllSongs(): array;
-    public function getSongsById(int $id): ?Song;
-    public function createSong(array $data, int $userId): int;
-    public function updateSong(array $data): bool;
-    public function deleteSong(int $id): void;
+    public function getAll(): array;
+    public function getById(int $id): ?Song;
+    public function create(array $data, int $userId): int;
+    public function update(array $data): bool;
+    public function delete(int $id): void;
 }

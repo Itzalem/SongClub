@@ -2,38 +2,30 @@
 
 namespace App\Services;
 
-use app\Models\User;
-use app\Models\ESongType;
-use app\src\Services\Interfaces\ISongService;
+use App\Services\Interfaces\ISongService;
+use App\Repositories\Interfaces\ISongRepository;
 use App\Models\Song;
 
 class SongService implements ISongService
 {
-    private $songRepository;
-    //private $postRepository;
+    private ISongRepository $songRepository;
 
-    public function __construct($songRepository, $postRepository)
+    public function __construct(ISongRepository $songRepository)
     {
         $this->songRepository = $songRepository;
-        //$this->postRepository = $postRepository;
     }
 
-     public function getAllSongs(): array
+    public function getAll(): array
     {
-        return $this->songRepository->getAllSongsAll();
+        return $this->songRepository->getAllSongs();
     }
 
-    public function getSongsById(int $id): ?Song
+    public function getById(int $id): ?Song
     {
         return $this->songRepository->getSongsById($id);
-    } 
-
-    public function getSongsByUser(User $user, ESongType $songType): array 
-    {
-        return $this->songRepository->getSongsByUser($user, $songType);
     }
 
-    public function createSong(array $data, int $userId): int
+    public function create(array $data, int $userId): int
     {
         $song             = new Song();
         $song->title      = trim($data['title']);
@@ -45,7 +37,7 @@ class SongService implements ISongService
         return $this->songRepository->createSong($song);
     }
 
-    public function updateSong(array $data): bool
+    public function update(array $data): bool
     {
         $song         = new Song();
         $song->id     = (int) $data['id'];
@@ -57,7 +49,7 @@ class SongService implements ISongService
         return $this->songRepository->updateSong($song);
     }
 
-    public function deleteSong(int $id): void
+    public function delete(int $id): void
     {
         $this->songRepository->deleteSong($id);
     }

@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
-class User {
-    public $userId;
-    public $username;
-    public $bio;
-    public $email;
-    public $passwordHash;
-    public ERole $role;
+class User
+{
+    public ?int    $userId       = null;
+    public ?string $username     = null;
+    public ?string $bio          = null;
+    public ?string $email        = null;
+    public ?string $passwordHash = null;
+    public ?string $role         = null;   // 'admin' | 'user'
 
-    public function __construct($data = []) {
-        foreach($data as $key => $value) {
-            $this->$key = $value;
+    public function __construct(array $data = [])
+    {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
         }
     }
 }

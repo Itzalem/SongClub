@@ -1,31 +1,25 @@
 <?php
 
-namespace app\Models;
+namespace App\Models;
 
-class Song {
-    public int $id;
-    public string $title;
-    public string $artist;
-    public ?string $album;
-    public ?string $genre;
-    public ?string $link;
-    public string $created_at;
+class Song
+{
+    public int     $id;
+    public string  $title;
+    public string  $artist;
+    public ?string $album        = null;
+    public ?string $genre        = null;
+    public ?string $link         = null;
+    public int     $created_by;
+    public string  $created_at;
+    public ?string $creator_name = null;
 
-    public function __construct($data = []) {
-        foreach($data as $key => $value) {
-            $this->$key = $value;
-        }
-    }
-    
-public function jsonSerialize(): mixed
+    public function __construct(array $data = [])
     {
-        return [
-            'id'     => $this->id,
-            'title'  => $this->title,
-            'artist' => $this->artist,
-            'album'  => $this->album ?? null,
-            'genre'  => $this->genre ?? null,
-            'link'   => $this->link ?? null,
-        ];
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
     }
 }

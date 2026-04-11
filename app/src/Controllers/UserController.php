@@ -1,69 +1,40 @@
 <?php
 
-namespace app\Controllers;
-
-use app\Repositories\UserRepository;
-
 namespace App\Controllers;
 
 use App\Framework\Controller;
 use App\Services\UserService;
-use App\Services\SongService;
-use App\ViewModels\ProfileViewModel;
-use App\ViewModels\ProfileVm;
-use App\Models\User;
+use App\Repositories\UserRepository;
 
-class UserController extends Controller {
-    
-    private $userService;
-    private $songService;
-    private $favoriteService;
-    private $commentRepo;
+class UserController extends Controller
+{
+    // GET /admin/users — admin panel: list all users
+    public function index(array $vars = []): void
+    {
+        $this->requireAdmin();
 
-    public function __construct(UserService $userService, SongService $songService, FavoriteService $favoriteService, CommentRepository $commentRepo) {
-        $this->userService = $userService;
-        $this->songService = $songService;
-        $this->favoriteService = $favoriteService;
-        $this->commentRepo = $commentRepo;
+        $users = (new UserService(new UserRepository()))->getAllUsers();
+
+        $this->render('Admin', ['users' => $users]);
     }
 
-    public function show($profileId) {
-        // 1. ¿Quién está logueado? (De la sesión)
-        $currentUserId = $_SESSION['user_id'] ?? null;
+    // POST /admin/users/{id}/delete — admin deletes a user
+    public function delete(array $vars = []): void
+    {
+        $this->requireAdmin();
 
-        // 2. Cargamos los datos básicos del dueño del perfil
-        $user = $this->userService->getUserById($profileId);
-        if (!$user) {
-            $this->render('404'); // Si el usuario no existe
-            return;
+        $targetId = (int) ($vars['id'] ?? 0);
+
+        // Prevent admin from deleting themselves
+        if ($targetId > 0 && $targetId !== (int) $_SESSION['user_id']) {
+            (new UserService(new UserRepository()))->deleteUser($targetId);
         }
 
-        // 3. Creamos el ViewModel
-        $vm = new ProfileVm();
-        $vm->user = $user;
-        $vm->isOwner = ($currentUserId == $profileId);
-
-        // 4. Pedimos las canciones al Service
-        // El Service se encargará de usar los Repositories con los JOINs que vimos
-        $vm->favorites = $this->favoriteService->getFavoritesByUser($profileId);
-        $vm->lastSong = $this->songService->getLastListened($profileId);
-        $vm->comments = $this->songService->getCommentsForPost($vm->lastSong->id ?? 0);
-
-        if ($vm->lastPost !== null) {
-            $vm->comments = $this->commentRepo->getByPost($vm->lastPost->id);
-        }
-
-        // 5. PRIVACIDAD: Solo cargamos los likes si es el dueño
-        if ($vm->isOwner) {
-            $vm->likes = $this->songService->getLikes($profileId);
-        } else {
-            $vm->likes = []; // Vacío para otros usuarios
-        }
-
-        // 6. ¡A la vista!
-        $this->render('UserProfile', ['vm' => $vm]);
+        header('Location: /admin/users');
+        exit;
     }
 
+    // POST /profile/update — update own profile
     public function update(array $vars = []): void
     {
         $this->requireAuth();
@@ -90,7 +61,7 @@ class UserController extends Controller {
         exit;
     }
 
-    // API — live user search
+    // GET /api/users/search?q= — live user search API
     public function search(array $vars = []): void
     {
         $this->requireAuth();
@@ -102,12 +73,11 @@ class UserController extends Controller {
         foreach ($users as $u) {
             $result[] = [
                 'id'       => $u->userId,
-                'username' => $u->username,
-                'bio'      => $u->bio,
+                'username' => htmlspecialchars($u->username, ENT_QUOTES, 'UTF-8'),
+                'bio'      => htmlspecialchars($u->bio ?? '', ENT_QUOTES, 'UTF-8'),
             ];
         }
 
         $this->json($result);
     }
-
 }

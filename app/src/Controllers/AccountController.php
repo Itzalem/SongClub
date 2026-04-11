@@ -8,13 +8,6 @@ use App\Repositories\UserRepository;
 
 class AccountController extends Controller
 {
-    private $userService;
-
-    public function __construct(UserService $userService) {
-        $this->userService = $userService;
-    }
-
-
     public function login(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -31,7 +24,8 @@ class AccountController extends Controller
             if (empty($email) || empty($password)) {
                 $error = 'All fields are required.';
             } else {
-                $user = $this->userService->login($email, $password);
+                $userService = new UserService(new UserRepository());
+                $user        = $userService->login($email, $password);
 
                 if ($user) {
                     $_SESSION['user_id']  = $user->userId;
@@ -45,7 +39,7 @@ class AccountController extends Controller
             }
         }
 
-        $this->render('auth/login', ['error' => $error]);
+        $this->render('Login', ['error' => $error]);
     }
 
     public function register(array $vars = []): void
@@ -59,14 +53,15 @@ class AccountController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $userId = $this->userService->register(
+                $userService = new UserService(new UserRepository());
+                $userId      = $userService->register(
                     $_POST['username'] ?? '',
                     $_POST['email']    ?? '',
                     $_POST['password'] ?? '',
                     $_POST['bio']      ?? ''
                 );
                 $_SESSION['user_id']  = $userId;
-                $_SESSION['username'] = $_POST['username'];
+                $_SESSION['username'] = trim($_POST['username'] ?? '');
                 $_SESSION['role']     = 'user';
                 header('Location: /');
                 exit;
@@ -75,7 +70,7 @@ class AccountController extends Controller
             }
         }
 
-        $this->render('auth/register', ['error' => $error]);
+        $this->render('Register', ['error' => $error]);
     }
 
     public function logout(array $vars = []): void

@@ -5,8 +5,6 @@ namespace App\Repositories;
 use App\Framework\Repository;
 use App\Repositories\Interfaces\ISongRepository;
 use App\Models\Song;
-use App\Models\User;
-use App\Models\ESongType;
 use PDO;
 
 class SongRepository extends Repository implements ISongRepository
@@ -40,37 +38,6 @@ class SongRepository extends Repository implements ISongRepository
         $statement->execute();
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         return $row ? new Song($row) : null;
-    }
-
-
-    public function getSongsByUser(User $user, ESongType $songType): array
-    {
-        if($songType === ESongType::FAVORITE) {
-       $sql = "SELECT s.id, s.title, s.artist, s.album, s.genre, s.link 
-            FROM SONGS s
-            JOIN FAVORITES f ON s.id = f.song_id
-            WHERE f.user_id = :userId";
-        
-    }
-    else if($songType === ESongType::LIKED) {
-        $sql = "SELECT s.id, s.title, s.artist, s.album, s.genre, s.link 
-            FROM SONGS s
-            JOIN LIKES f ON s.id = f.song_id
-            WHERE f.user_id = :userId";
-    }
-        $connection = $this->getConnection();
-        $statement  = $connection->prepare($sql);
-        $statement->bindParam(':userId', $user->userId, PDO::PARAM_INT);
-        $statement->execute();
-        $rows  = $statement->fetchAll(PDO::FETCH_ASSOC);
-        $songs = [];
-        foreach ($rows as $row) {
-            $songs[] = new Song($row);
-        }
-        return $songs;
-
-        
-
     }
 
     public function createSong(Song $song): int
