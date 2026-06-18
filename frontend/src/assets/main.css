@@ -265,6 +265,80 @@ body {
     text-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
+.btn-like {
+    background: #fff0f3;
+    color: #e63757;
+    border: 2px solid #fcd0da;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: var(--sc-transition);
+}
+
+.btn-like:hover,
+.btn-like.active {
+    background: #e63757;
+    color: white;
+    border-color: #e63757;
+    transform: scale(1.05);
+}
+
+.btn-fav {
+    background: #fffbeb;
+    color: #d97706;
+    border: 2px solid #fde68a;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: var(--sc-transition);
+}
+
+.btn-fav:hover,
+.btn-fav.active {
+    background: var(--sc-accent);
+    color: var(--sc-olive);
+    border-color: var(--sc-accent);
+    transform: scale(1.05);
+}
+
+/* 13. Utilidades de color */
+.text-olive {
+    color: var(--sc-olive) !important;
+}
+
+.bg-sc-olive-soft {
+    background-color: var(--sc-olive-soft) !important;
+}
+
+/* 14. Back link */
+.back-link {
+    color: var(--sc-olive);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+    opacity: 0.75;
+    transition: opacity 0.2s;
+}
+
+.back-link:hover {
+    opacity: 1;
+    color: var(--sc-olive);
+}
+
+/* 15. Tipografía extra */
+.fw-extrabold {
+    font-weight: 800 !important;
+}
+
+/* 16. Sombras extra (compatibilidad con clases tipo Tailwind) */
+.shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 17. Border accent para detalles de canción */
+.border-accent {
+    border-color: var(--sc-accent) !important;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
     .navbar-brand { font-size: 1.2rem; }

@@ -16,7 +16,7 @@
             <label class="form-label fw-bold">Contraseña</label>
             <input v-model="password" type="password" class="form-control" required>
           </div>
-          <button class="btn btn-sc-primary w-100">Entrar</button>
+          <button type="submit" class="btn btn-sc-primary w-100">Entrar</button>
         </form>
 
         <p class="text-center mt-4 text-muted">
