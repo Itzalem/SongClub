@@ -38,4 +38,24 @@ abstract class Controller
         echo json_encode($data);
         exit;
     }
+
+    // Validates the JWT from the Authorization header.
+    // Returns the token payload (id, username, role) or responds 401 and exits.
+    protected function validateJWT(): object
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            $this->json(['error' => 'No token provided'], 401);
+        }
+
+        $token = substr($header, 7);
+
+        try {
+            $decoded = JWT::decode($token, new Key(Config::JWT_SECRET, 'HS256'));
+            return $decoded->data;
+        } catch (\Exception $e) {
+            $this->json(['error' => 'Invalid or expired token'], 401);
+        }
+    }
 }
