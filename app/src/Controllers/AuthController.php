@@ -7,7 +7,7 @@ use App\Framework\Controller;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
-use Firebase\JWT\JWT;
+use App\Framework\JwtHelper;
 
 class AuthController extends Controller
 {
@@ -96,7 +96,7 @@ class AuthController extends Controller
             ],
         ];
 
-        return JWT::encode($payload, Config::JWT_SECRET, 'HS256');
+        return JwtHelper::encode($payload);
     }
 
     private function userToArray(User $user): array
