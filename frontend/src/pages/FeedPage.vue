@@ -1,11 +1,9 @@
 <template>
   <div class="row justify-content-center">
     <div class="col-lg-8">
-      <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-          <h2 class="fw-extrabold fs-1 mb-1">Feed Social</h2>
-          <p class="text-muted">Lo que la comunidad está escuchando ahora.</p>
-        </div>
+      <div class="mb-5">
+        <h2 class="fw-extrabold fs-1 mb-1">Feed Social</h2>
+        <p class="text-muted">Lo que la comunidad está escuchando ahora.</p>
       </div>
 
       <div v-if="loading" class="text-center py-5 opacity-50">
@@ -13,14 +11,17 @@
       </div>
 
       <template v-else>
-        <FeedPostCard v-for="post in posts" :key="post.id" :post="post" />
-
         <div v-if="posts.length === 0" class="text-center py-5 opacity-25">
           <span class="display-1">🌑</span>
           <p class="fs-4 mt-3">El feed está vacío. ¡Sé el primero en publicar!</p>
         </div>
-
-        <PaginationBar :page="page" :total-pages="totalPages" @change="load" />
+        <FeedList
+          v-else
+          :posts="posts"
+          :page="page"
+          :total-pages="totalPages"
+          @page-change="load"
+        />
       </template>
     </div>
   </div>
@@ -28,8 +29,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import FeedPostCard from '../components/molecules/FeedPostCard.vue'
-import PaginationBar from '../components/molecules/PaginationBar.vue'
+import FeedList from '../components/organisms/FeedList.vue'
 import api from '../utils/axios'
 
 const posts      = ref([])
@@ -48,4 +48,3 @@ async function load(p = 1) {
 
 onMounted(() => load())
 </script>
-

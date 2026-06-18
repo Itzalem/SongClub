@@ -7,7 +7,7 @@
 
         <div v-if="error" class="alert alert-danger rounded-3">{{ error }}</div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="handleLogin">
           <div class="mb-3">
             <label class="form-label fw-bold">Email</label>
             <input v-model="email" type="email" class="form-control" required>
