@@ -1,32 +1,53 @@
 <template>
-  <nav class="bg-gray-900 text-white px-6 py-3 flex items-center justify-between">
-    <router-link to="/" class="text-xl font-bold text-yellow-400 hover:text-yellow-300">
-      SongClub
-    </router-link>
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <router-link class="navbar-brand d-flex align-items-center" to="/">
+        <span class="fs-3 me-2">🎧</span>
+        <span class="fw-bold">SongClub</span>
+      </router-link>
 
-    <div class="flex items-center gap-4 text-sm">
-      <router-link to="/songs" class="hover:text-yellow-400 transition-colors">Songs</router-link>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-      <template v-if="auth.isLoggedIn">
-        <router-link :to="`/profile/${auth.user.id}`" class="hover:text-yellow-400 transition-colors">
-          {{ auth.user.username }}
-        </router-link>
-        <router-link v-if="auth.isAdmin" to="/admin" class="hover:text-yellow-400 transition-colors">
-          Admin
-        </router-link>
-        <button @click="handleLogout"
-          class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors">
-          Logout
-        </button>
-      </template>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item">
+            <router-link class="nav-link px-3" to="/songs">Descubrir</router-link>
+          </li>
+          <li v-if="auth.isLoggedIn" class="nav-item">
+            <router-link class="nav-link px-3" :to="`/profile/${auth.user.id}`">Mi Perfil</router-link>
+          </li>
+          <li v-if="auth.isAdmin" class="nav-item">
+            <router-link class="nav-link px-3" to="/admin">Admin</router-link>
+          </li>
+        </ul>
 
-      <template v-else>
-        <router-link to="/login" class="hover:text-yellow-400 transition-colors">Login</router-link>
-        <router-link to="/register"
-          class="bg-yellow-400 text-gray-900 font-semibold px-3 py-1 rounded hover:bg-yellow-300 transition-colors">
-          Register
-        </router-link>
-      </template>
+        <div class="d-flex align-items-center gap-3">
+          <template v-if="auth.isLoggedIn">
+            <div class="dropdown">
+              <a class="nav-link dropdown-toggle fw-bold text-white" href="#" data-bs-toggle="dropdown">
+                {{ auth.user.username }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 rounded-3">
+                <li>
+                  <router-link class="dropdown-item py-2" :to="`/profile/${auth.user.id}`">
+                    Perfil
+                  </router-link>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li class="px-2">
+                  <button class="btn btn-danger btn-sm w-100 rounded-2" @click="logout">Salir</button>
+                </li>
+              </ul>
+            </div>
+          </template>
+          <template v-else>
+            <router-link to="/login" class="btn btn-outline-light btn-sm px-4 rounded-pill">Entrar</router-link>
+            <router-link to="/register" class="btn btn-sc-primary btn-sm px-4 rounded-pill">Unirse</router-link>
+          </template>
+        </div>
+      </div>
     </div>
   </nav>
 </template>
@@ -38,7 +59,7 @@ import { useRouter } from 'vue-router'
 const auth   = useAuthStore()
 const router = useRouter()
 
-function handleLogout() {
+function logout() {
   auth.logout()
   router.push('/login')
 }

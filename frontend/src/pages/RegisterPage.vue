@@ -1,41 +1,37 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <h1 class="text-2xl font-bold mb-6 text-center">Join SongClub</h1>
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-2xl rounded-5 overflow-hidden p-5">
+        <h2 class="fw-bold mb-1">Únete a SongClub 🎵</h2>
+        <p class="text-muted mb-4">Crea tu cuenta y comparte tu música</p>
 
-      <div v-if="error" class="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{{ error }}</div>
+        <div v-if="error" class="alert alert-danger rounded-3">{{ error }}</div>
 
-      <form @submit.prevent="handleRegister">
-        <div class="mb-4">
-          <label for="username" class="block text-sm font-medium mb-1">Username</label>
-          <input id="username" v-model="username" type="text" required
-            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-        </div>
-        <div class="mb-4">
-          <label for="email" class="block text-sm font-medium mb-1">Email</label>
-          <input id="email" v-model="email" type="email" required
-            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-        </div>
-        <div class="mb-4">
-          <label for="password" class="block text-sm font-medium mb-1">Password</label>
-          <input id="password" v-model="password" type="password" required
-            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-        </div>
-        <div class="mb-6">
-          <label for="bio" class="block text-sm font-medium mb-1">Bio <span class="text-gray-400">(optional)</span></label>
-          <textarea id="bio" v-model="bio" rows="3"
-            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"></textarea>
-        </div>
-        <button type="submit" :disabled="isLoading"
-          class="w-full bg-yellow-400 text-gray-900 font-semibold py-2 rounded hover:bg-yellow-300 transition-colors disabled:opacity-50">
-          {{ isLoading ? 'Creating account...' : 'Register' }}
-        </button>
-      </form>
+        <form @submit.prevent="submit">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nombre de usuario</label>
+            <input v-model="username" type="text" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Email</label>
+            <input v-model="email" type="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Contraseña</label>
+            <input v-model="password" type="password" class="form-control" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold">Bio <span class="text-muted fw-normal">(opcional)</span></label>
+            <textarea v-model="bio" class="form-control" rows="2" placeholder="Cuéntanos sobre tu gusto musical..."></textarea>
+          </div>
+          <button class="btn btn-sc-primary w-100">Crear cuenta</button>
+        </form>
 
-      <p class="mt-4 text-center text-sm">
-        Already have an account?
-        <router-link to="/login" class="text-yellow-600 hover:underline">Login</router-link>
-      </p>
+        <p class="text-center mt-4 text-muted">
+          ¿Ya tienes cuenta?
+          <router-link to="/login" class="fw-bold" style="color:var(--sc-olive)">Entrar</router-link>
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -45,25 +41,21 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-const username  = ref('')
-const email     = ref('')
-const password  = ref('')
-const bio       = ref('')
-const error     = ref(null)
-const isLoading = ref(false)
-const auth      = useAuthStore()
-const router    = useRouter()
+const auth     = useAuthStore()
+const router   = useRouter()
+const username = ref('')
+const email    = ref('')
+const password = ref('')
+const bio      = ref('')
+const error    = ref('')
 
-async function handleRegister() {
-  error.value     = null
-  isLoading.value = true
+async function submit() {
+  error.value = ''
   try {
     await auth.register(username.value, email.value, password.value, bio.value)
     router.push('/')
-  } catch (err) {
-    error.value = err.response?.data?.error || 'Registration failed.'
-  } finally {
-    isLoading.value = false
+  } catch (e) {
+    error.value = e.response?.data?.error || 'Error al registrarse'
   }
 }
 </script>

@@ -7,7 +7,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use FastRoute\RouteCollector;
 use function FastRoute\simpleDispatcher;
 
-// CORS — allows the Vue frontend (port 5173) to call this API
+// CORS — allow all origins (Vue dev server port can vary)
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -64,24 +64,33 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST', '/api/auth/register', ['App\Controllers\AuthController', 'register']);
     $r->addRoute('GET',  '/api/auth/me',       ['App\Controllers\AuthController', 'me']);
 
-        // Songs API
+    // Songs REST API
     $r->addRoute('GET',    '/api/songs',          ['App\Controllers\SongController', 'apiList']);
-    $r->addRoute('GET',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiShow']);
     $r->addRoute('POST',   '/api/songs',          ['App\Controllers\SongController', 'apiCreate']);
+    $r->addRoute('GET',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiShow']);
     $r->addRoute('PUT',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiUpdate']);
     $r->addRoute('DELETE', '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiDelete']);
 
-        // Feed
-    $r->addRoute('GET',  '/api/feed',                    ['App\Controllers\PostController', 'apiFeed']);
-    $r->addRoute('POST', '/api/posts',                   ['App\Controllers\PostController', 'apiSet']);
-    $r->addRoute('GET',  '/api/posts/{id:\d+}/comments', ['App\Controllers\PostController', 'apiGetComments']);
-    $r->addRoute('POST', '/api/posts/{id:\d+}/comments', ['App\Controllers\PostController', 'apiAddComment']);
+    // Social feed
+    $r->addRoute('GET',  '/api/feed',                       ['App\Controllers\PostController', 'apiFeed']);
+    $r->addRoute('POST', '/api/posts',                      ['App\Controllers\PostController', 'apiSet']);
+    $r->addRoute('GET',  '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'apiGetComments']);
+    $r->addRoute('POST', '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'apiAddComment']);
 
-    // Favorites & Likes API
+    // User favorites & likes
     $r->addRoute('GET',  '/api/users/{id:\d+}/favorites', ['App\Controllers\FavoriteController', 'apiFavorites']);
     $r->addRoute('GET',  '/api/users/{id:\d+}/liked',     ['App\Controllers\FavoriteController', 'apiLiked']);
     $r->addRoute('POST', '/api/songs/{id:\d+}/favorite',  ['App\Controllers\FavoriteController', 'apiToggleFavorite']);
     $r->addRoute('POST', '/api/songs/{id:\d+}/like',      ['App\Controllers\FavoriteController', 'apiToggleLike']);
+
+    // User profile & admin
+    $r->addRoute('GET',    '/api/users/search',          ['App\Controllers\UserController', 'search']);
+    $r->addRoute('GET',    '/api/users/{id:\d+}',        ['App\Controllers\UserController', 'apiShow']);
+    $r->addRoute('GET',    '/api/admin/users',           ['App\Controllers\UserController', 'apiAdminList']);
+    $r->addRoute('DELETE', '/api/admin/users/{id:\d+}',  ['App\Controllers\UserController', 'apiAdminDelete']);
+
+    // Legacy export
+    $r->addRoute('GET', '/api/favorites/{userId:\d+}',   ['App\Controllers\FavoriteController', 'export']);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];
