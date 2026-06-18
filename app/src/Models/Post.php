@@ -9,6 +9,8 @@ class Post
     public int $song_id;
     public ?string $caption    = null;
     public string $created_at  = '';
+    public ?string $username      = null;
+    public int     $comment_count = 0;
 
     // Joined song fields — populated when fetching with JOIN
     public ?string $song_title  = null;

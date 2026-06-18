@@ -20,34 +20,82 @@ class PostRepository extends Repository implements IPostRepository
         return $post;
     }
 
-    // En PostRepository.php
-public function getAllByUserId(int $userId): array
-{
-    $sql = "SELECT p.*, s.title AS song_title, s.artist AS song_artist,
-                   s.album AS song_album, s.genre AS song_genre, s.link AS song_link
-            FROM posts p
-            JOIN songs s ON p.song_id = s.id
-            WHERE p.user_id = :id
-            ORDER BY p.created_at DESC"; // Eliminado el LIMIT 1
+    public function getAllByUserId(int $userId): array
+    {
+        $sql = "SELECT p.*, s.title AS song_title, s.artist AS song_artist,
+                       s.album AS song_album, s.genre AS song_genre, s.link AS song_link
+                FROM posts p
+                JOIN songs s ON p.song_id = s.id
+                WHERE p.user_id = :id
+                ORDER BY p.created_at DESC";
 
-    $connection = $this->getConnection();
-    $statement  = $connection->prepare($sql);
-    $statement->bindParam(':id', $userId, PDO::PARAM_INT);
-    $statement->execute();
-    
-    $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-    $posts = [];
-    foreach ($rows as $row) {
-        $posts[] = new Post($row);
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':id', $userId, PDO::PARAM_INT);
+        $statement->execute();
+
+        $posts = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $posts[] = new Post($row);
+        }
+        return $posts;
     }
-    return $posts;
-}
+
+    public function getLastByUserId(int $userId): ?Post
+    {
+        $sql = "SELECT p.*, s.title AS song_title, s.artist AS song_artist,
+                       s.album AS song_album, s.genre AS song_genre, s.link AS song_link
+                FROM posts p
+                JOIN songs s ON p.song_id = s.id
+                WHERE p.user_id = :id
+                ORDER BY p.created_at DESC
+                LIMIT 1";
+
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':id', $userId, PDO::PARAM_INT);
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return $row ? new Post($row) : null;
+    }
+
+    // Social feed: all users' last listened posts with user + song info
+    public function getFeed(int $offset, int $limit): array
+    {
+        $sql = "SELECT p.*, 
+                       s.title AS song_title, s.artist AS song_artist,
+                       s.album AS song_album, s.genre AS song_genre, s.link AS song_link,
+                       u.username,
+                       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+                FROM posts p
+                JOIN songs s ON p.song_id = s.id
+                JOIN users u ON p.user_id = u.id
+                ORDER BY p.created_at DESC
+                LIMIT :limit OFFSET :offset";
+
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':limit',  $limit,  PDO::PARAM_INT);
+        $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        $posts = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $posts[] = new Post($row);
+        }
+        return $posts;
+    }
+
+    public function countFeed(): int
+    {
+        $statement = $this->getConnection()->query("SELECT COUNT(*) FROM posts");
+        return (int) $statement->fetchColumn();
+    }
 
     public function createPost(Post $post): int
     {
         $connection = $this->getConnection();
 
-        // INSERT OR UPDATE: each user has only one "last listened" post
         $sql = "INSERT INTO posts (caption, user_id, song_id, created_at)
                 VALUES (:caption, :user_id, :song_id, NOW())
                 ON DUPLICATE KEY UPDATE song_id = :song_id2, caption = :caption2, created_at = NOW()";

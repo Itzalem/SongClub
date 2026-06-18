@@ -73,12 +73,69 @@ class InteractionRepository extends Repository implements IInteractionRepository
         $statement  = $connection->prepare($sql);
         $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
         $statement->execute();
-        $rows  = $statement->fetchAll(PDO::FETCH_ASSOC);
         $songs = [];
-        foreach ($rows as $row) {
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $songs[] = new Song($row);
         }
         return $songs;
+    }
+
+    // For API: filter by artist + pagination
+    public function getSongsByUserFiltered(int $userId, ESongType $type, string $artist, int $offset, int $limit): array
+    {
+        $table      = $this->getTable($type);
+        $connection = $this->getConnection();
+
+        if ($artist !== '') {
+            $sql       = "SELECT s.* FROM songs s
+                          JOIN {$table} i ON s.id = i.song_id
+                          WHERE i.user_id = :userId AND s.artist LIKE :artist
+                          ORDER BY i.created_at DESC
+                          LIMIT :limit OFFSET :offset";
+            $statement = $connection->prepare($sql);
+            $like      = '%' . $artist . '%';
+            $statement->bindParam(':artist', $like, PDO::PARAM_STR);
+        } else {
+            $sql       = "SELECT s.* FROM songs s
+                          JOIN {$table} i ON s.id = i.song_id
+                          WHERE i.user_id = :userId
+                          ORDER BY i.created_at DESC
+                          LIMIT :limit OFFSET :offset";
+            $statement = $connection->prepare($sql);
+        }
+
+        $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $statement->bindParam(':limit',  $limit,  PDO::PARAM_INT);
+        $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        $songs = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $songs[] = new Song($row);
+        }
+        return $songs;
+    }
+
+    public function countByUser(int $userId, ESongType $type, string $artist): int
+    {
+        $table      = $this->getTable($type);
+        $connection = $this->getConnection();
+
+        if ($artist !== '') {
+            $sql       = "SELECT COUNT(*) FROM songs s
+                          JOIN {$table} i ON s.id = i.song_id
+                          WHERE i.user_id = :userId AND s.artist LIKE :artist";
+            $statement = $connection->prepare($sql);
+            $like      = '%' . $artist . '%';
+            $statement->bindParam(':artist', $like, PDO::PARAM_STR);
+        } else {
+            $sql       = "SELECT COUNT(*) FROM {$table} WHERE user_id = :userId";
+            $statement = $connection->prepare($sql);
+        }
+
+        $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $statement->execute();
+        return (int) $statement->fetchColumn();
     }
 
     public function getIdsByUser(int $userId, ESongType $type): array

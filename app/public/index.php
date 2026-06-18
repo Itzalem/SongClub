@@ -70,6 +70,18 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST',   '/api/songs',          ['App\Controllers\SongController', 'apiCreate']);
     $r->addRoute('PUT',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiUpdate']);
     $r->addRoute('DELETE', '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiDelete']);
+
+        // Feed
+    $r->addRoute('GET',  '/api/feed',                    ['App\Controllers\PostController', 'apiFeed']);
+    $r->addRoute('POST', '/api/posts',                   ['App\Controllers\PostController', 'apiSet']);
+    $r->addRoute('GET',  '/api/posts/{id:\d+}/comments', ['App\Controllers\PostController', 'apiGetComments']);
+    $r->addRoute('POST', '/api/posts/{id:\d+}/comments', ['App\Controllers\PostController', 'apiAddComment']);
+
+    // Favorites & Likes API
+    $r->addRoute('GET',  '/api/users/{id:\d+}/favorites', ['App\Controllers\FavoriteController', 'apiFavorites']);
+    $r->addRoute('GET',  '/api/users/{id:\d+}/liked',     ['App\Controllers\FavoriteController', 'apiLiked']);
+    $r->addRoute('POST', '/api/songs/{id:\d+}/favorite',  ['App\Controllers\FavoriteController', 'apiToggleFavorite']);
+    $r->addRoute('POST', '/api/songs/{id:\d+}/like',      ['App\Controllers\FavoriteController', 'apiToggleLike']);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];
