@@ -64,10 +64,12 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST', '/api/auth/register', ['App\Controllers\AuthController', 'register']);
     $r->addRoute('GET',  '/api/auth/me',       ['App\Controllers\AuthController', 'me']);
 
-    // Songs API (existing)
-    $r->addRoute('GET', '/api/songs',                  ['App\Controllers\SongController',     'apiIndex']);
-    $r->addRoute('GET', '/api/favorites/{userId:\d+}', ['App\Controllers\FavoriteController', 'export']);
-    $r->addRoute('GET', '/api/users/search',           ['App\Controllers\UserController',     'search']);
+        // Songs API
+    $r->addRoute('GET',    '/api/songs',          ['App\Controllers\SongController', 'apiList']);
+    $r->addRoute('GET',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiShow']);
+    $r->addRoute('POST',   '/api/songs',          ['App\Controllers\SongController', 'apiCreate']);
+    $r->addRoute('PUT',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiUpdate']);
+    $r->addRoute('DELETE', '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiDelete']);
 });
 
 $httpMethod = $_SERVER['REQUEST_METHOD'];

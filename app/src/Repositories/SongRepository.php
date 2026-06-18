@@ -26,6 +26,58 @@ class SongRepository extends Repository implements ISongRepository
         return $songs;
     }
 
+    public function getSongsFiltered(string $artist, int $offset, int $limit): array
+    {
+        $connection = $this->getConnection();
+
+        if ($artist !== '') {
+            $sql       = "SELECT s.*, u.username AS creator_name
+                          FROM songs s
+                          LEFT JOIN users u ON s.created_by = u.id
+                          WHERE s.artist LIKE :artist
+                          ORDER BY s.created_at DESC
+                          LIMIT :limit OFFSET :offset";
+            $statement = $connection->prepare($sql);
+            $like      = '%' . $artist . '%';
+            $statement->bindParam(':artist', $like,   PDO::PARAM_STR);
+        } else {
+            $sql       = "SELECT s.*, u.username AS creator_name
+                          FROM songs s
+                          LEFT JOIN users u ON s.created_by = u.id
+                          ORDER BY s.created_at DESC
+                          LIMIT :limit OFFSET :offset";
+            $statement = $connection->prepare($sql);
+        }
+
+        $statement->bindParam(':limit',  $limit,  PDO::PARAM_INT);
+        $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        $songs = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $songs[] = new Song($row);
+        }
+        return $songs;
+    }
+
+    public function countSongs(string $artist): int
+    {
+        $connection = $this->getConnection();
+
+        if ($artist !== '') {
+            $sql       = "SELECT COUNT(*) FROM songs WHERE artist LIKE :artist";
+            $statement = $connection->prepare($sql);
+            $like      = '%' . $artist . '%';
+            $statement->bindParam(':artist', $like, PDO::PARAM_STR);
+        } else {
+            $sql       = "SELECT COUNT(*) FROM songs";
+            $statement = $connection->prepare($sql);
+        }
+
+        $statement->execute();
+        return (int) $statement->fetchColumn();
+    }
+
     public function getSongsById(int $id): ?Song
     {
         $sql        = "SELECT s.*, u.username AS creator_name
@@ -53,7 +105,7 @@ class SongRepository extends Repository implements ISongRepository
         $statement->bindParam(':link',       $song->link,       PDO::PARAM_STR);
         $statement->bindParam(':created_by', $song->created_by, PDO::PARAM_INT);
         $statement->execute();
-        return (int) $connection->lastInsertId(); 
+        return (int) $connection->lastInsertId();
     }
 
     public function updateSong(Song $song): bool

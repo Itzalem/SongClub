@@ -8,6 +8,7 @@ use App\Services\FavoriteService;
 use App\Repositories\SongRepository;
 use App\Repositories\InteractionRepository;
 use App\Models\ESongType;
+use App\Models\Song;
 
 class SongController extends Controller
 {
@@ -132,21 +133,127 @@ class SongController extends Controller
         exit;
     }
 
-    // API — returns all songs as JSON
+    // ── REST API methods ────────────────────────────────────────────────────
+
+    // GET /api/songs?artist=queen&page=1&limit=10
+    public function apiList(array $vars = []): void
+    {
+        $artist = trim($_GET['artist'] ?? '');
+        $page   = max(1, (int) ($_GET['page']  ?? 1));
+        $limit  = min(50, max(1, (int) ($_GET['limit'] ?? 10)));
+        $offset = ($page - 1) * $limit;
+
+        $repo  = new SongRepository();
+        $songs = $repo->getSongsFiltered($artist, $offset, $limit);
+        $total = $repo->countSongs($artist);
+
+        $this->json([
+            'data'  => array_map([$this, 'songToArray'], $songs),
+            'total' => $total,
+            'page'  => $page,
+            'limit' => $limit,
+        ]);
+    }
+
+    // GET /api/songs/{id}
+    public function apiShow(array $vars = []): void
+    {
+        $song = (new SongService(new SongRepository()))->getById((int) $vars['id']);
+
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
+        }
+
+        $this->json($this->songToArray($song));
+    }
+
+    // POST /api/songs  — requires JWT
+    public function apiCreate(array $vars = []): void
+    {
+        $tokenData = $this->validateJWT();
+        $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $title  = trim($body['title']  ?? '');
+        $artist = trim($body['artist'] ?? '');
+
+        if ($title === '' || $artist === '') {
+            $this->json(['error' => 'Title and artist are required.'], 400);
+        }
+
+        $service = new SongService(new SongRepository());
+        $id      = $service->create($body, $tokenData->id);
+        $song    = $service->getById($id);
+
+        $this->json($this->songToArray($song), 201);
+    }
+
+    // PUT /api/songs/{id}  — requires JWT, owner or admin
+    public function apiUpdate(array $vars = []): void
+    {
+        $tokenData = $this->validateJWT();
+        $service   = new SongService(new SongRepository());
+        $song      = $service->getById((int) $vars['id']);
+
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
+        }
+
+        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
+
+        $body   = json_decode(file_get_contents('php://input'), true) ?? [];
+        $title  = trim($body['title']  ?? '');
+        $artist = trim($body['artist'] ?? '');
+
+        if ($title === '' || $artist === '') {
+            $this->json(['error' => 'Title and artist are required.'], 400);
+        }
+
+        $body['id'] = $song->id;
+        $service->update($body);
+        $updated = $service->getById($song->id);
+
+        $this->json($this->songToArray($updated));
+    }
+
+    // DELETE /api/songs/{id}  — requires JWT, owner or admin
+    public function apiDelete(array $vars = []): void
+    {
+        $tokenData = $this->validateJWT();
+        $service   = new SongService(new SongRepository());
+        $song      = $service->getById((int) $vars['id']);
+
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
+        }
+
+        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
+
+        $service->delete($song->id);
+        $this->json(['message' => 'Song deleted.']);
+    }
+
+    private function songToArray(Song $song): array
+    {
+        return [
+            'id'           => $song->id,
+            'title'        => $song->title,
+            'artist'       => $song->artist,
+            'album'        => $song->album,
+            'genre'        => $song->genre,
+            'link'         => $song->link,
+            'created_by'   => $song->created_by,
+            'creator_name' => $song->creator_name,
+            'created_at'   => $song->created_at,
+        ];
+    }
+
+    // kept for backward compatibility with old PHP view
     public function apiIndex(array $vars = []): void
     {
-        $songs  = (new SongService(new SongRepository()))->getAll();
-        $result = [];
-        foreach ($songs as $s) {
-            $result[] = [
-                'id'     => $s->id,
-                'title'  => $s->title,
-                'artist' => $s->artist,
-                'album'  => $s->album,
-                'genre'  => $s->genre,
-                'link'   => $s->link,
-            ];
-        }
-        $this->json($result);
+        $this->apiList($vars);
     }
 }
