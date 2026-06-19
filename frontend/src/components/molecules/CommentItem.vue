@@ -14,6 +14,6 @@ defineProps({
 })
 
 function formatTime(dt) {
-  return new Date(dt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  return new Date(dt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 </script>

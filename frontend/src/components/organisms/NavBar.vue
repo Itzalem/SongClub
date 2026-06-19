@@ -13,10 +13,10 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
-            <router-link class="nav-link px-3" to="/songs">Descubrir</router-link>
+            <router-link class="nav-link px-3" to="/songs">Explore</router-link>
           </li>
           <li v-if="auth.isLoggedIn" class="nav-item">
-            <router-link class="nav-link px-3" :to="`/profile/${auth.user.id}`">Mi Perfil</router-link>
+            <router-link class="nav-link px-3" :to="`/profile/${auth.user.id}`">My Profile</router-link>
           </li>
           <li v-if="auth.isAdmin" class="nav-item">
             <router-link class="nav-link px-3" to="/admin">Admin</router-link>
@@ -32,19 +32,19 @@
               <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 rounded-3">
                 <li>
                   <router-link class="dropdown-item py-2" :to="`/profile/${auth.user.id}`">
-                    Perfil
+                    Profile
                   </router-link>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li class="px-2">
-                  <button class="btn btn-danger btn-sm w-100 rounded-2" @click="logout">Salir</button>
+                  <button class="btn btn-danger btn-sm w-100 rounded-2" @click="logout">Log out</button>
                 </li>
               </ul>
             </div>
           </template>
           <template v-else>
-            <router-link to="/login" class="btn btn-outline-light btn-sm px-4 rounded-pill">Entrar</router-link>
-            <router-link to="/register" class="btn btn-sc-primary btn-sm px-4 rounded-pill">Unirse</router-link>
+            <router-link to="/login" class="btn btn-outline-light btn-sm px-4 rounded-pill">Log in</router-link>
+            <router-link to="/register" class="btn btn-sc-primary btn-sm px-4 rounded-pill">Join</router-link>
           </template>
         </div>
       </div>

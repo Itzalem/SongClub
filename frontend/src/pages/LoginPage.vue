@@ -2,8 +2,8 @@
   <div class="row justify-content-center">
     <div class="col-md-5">
       <div class="card border-0 shadow-2xl rounded-5 overflow-hidden p-5">
-        <h2 class="fw-bold mb-1">Bienvenido de vuelta 🎧</h2>
-        <p class="text-muted mb-4">Entra a tu cuenta de SongClub</p>
+        <h2 class="fw-bold mb-1">Welcome back 🎧</h2>
+        <p class="text-muted mb-4">Sign in to your SongClub account</p>
 
         <div v-if="error" class="alert alert-danger rounded-3">{{ error }}</div>
 
@@ -13,15 +13,15 @@
             <input v-model="email" type="email" class="form-control" required>
           </div>
           <div class="mb-4">
-            <label class="form-label fw-bold">Contraseña</label>
+            <label class="form-label fw-bold">Password</label>
             <input v-model="password" type="password" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-sc-primary w-100">Entrar</button>
+          <button type="submit" class="btn btn-sc-primary w-100">Log in</button>
         </form>
 
         <p class="text-center mt-4 text-muted">
-          ¿No tienes cuenta?
-          <router-link to="/register" class="fw-bold" style="color:var(--sc-olive)">Únete</router-link>
+          Don't have an account?
+          <router-link to="/register" class="fw-bold" style="color:var(--sc-olive)">Join</router-link>
         </p>
       </div>
     </div>

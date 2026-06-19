@@ -62,11 +62,12 @@ class PostRepository extends Repository implements IPostRepository
     // Social feed: all users' last listened posts with user + song info
     public function getFeed(int $offset, int $limit): array
     {
-        $sql = "SELECT p.*, 
+        $sql = "SELECT p.*,
                        s.title AS song_title, s.artist AS song_artist,
                        s.album AS song_album, s.genre AS song_genre, s.link AS song_link,
                        u.username,
-                       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+                       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                       (SELECT COUNT(*) FROM likes l WHERE l.song_id = p.song_id) AS like_count
                 FROM posts p
                 JOIN songs s ON p.song_id = s.id
                 JOIN users u ON p.user_id = u.id
@@ -97,15 +98,12 @@ class PostRepository extends Repository implements IPostRepository
         $connection = $this->getConnection();
 
         $sql = "INSERT INTO posts (caption, user_id, song_id, created_at)
-                VALUES (:caption, :user_id, :song_id, NOW())
-                ON DUPLICATE KEY UPDATE song_id = :song_id2, caption = :caption2, created_at = NOW()";
+                VALUES (:caption, :user_id, :song_id, NOW())";
 
         $statement = $connection->prepare($sql);
-        $statement->bindParam(':caption',  $post->caption);
-        $statement->bindParam(':user_id',  $post->user_id,  PDO::PARAM_INT);
-        $statement->bindParam(':song_id',  $post->song_id,  PDO::PARAM_INT);
-        $statement->bindParam(':song_id2', $post->song_id,  PDO::PARAM_INT);
-        $statement->bindParam(':caption2', $post->caption);
+        $statement->bindParam(':caption', $post->caption);
+        $statement->bindParam(':user_id', $post->user_id, PDO::PARAM_INT);
+        $statement->bindParam(':song_id', $post->song_id, PDO::PARAM_INT);
         $statement->execute();
 
         return (int) $connection->lastInsertId();

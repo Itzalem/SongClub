@@ -5,7 +5,7 @@
       <span class="badge bg-secondary">{{ users.length }} users</span>
     </div>
 
-    <div v-if="users.length === 0" class="text-muted">No hay usuarios.</div>
+    <div v-if="users.length === 0" class="text-muted">No users found.</div>
 
     <div v-else class="table-responsive">
       <table class="table table-hover align-middle bg-white rounded-3 overflow-hidden shadow-sm">
@@ -35,7 +35,7 @@
               {{ u.bio || '' }}
             </td>
             <td>
-              <span v-if="u.id === auth.user.id" class="text-muted small">tú</span>
+              <span v-if="u.id === auth.user.id" class="text-muted small">you</span>
               <button v-else class="btn btn-sm btn-danger" @click="deleteUser(u.id)">Delete</button>
             </td>
           </tr>
@@ -60,7 +60,7 @@ async function load() {
 
 async function deleteUser(userId) {
   const u = users.value.find(u => u.id === userId)
-  if (!confirm(`¿Eliminar a ${u?.username}?`)) return
+  if (!confirm(`Delete ${u?.username}?`)) return
   await api.delete(`/api/admin/users/${userId}`)
   users.value = users.value.filter(u => u.id !== userId)
 }

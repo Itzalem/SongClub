@@ -3,13 +3,13 @@
     <button class="btn btn-sc-outline btn-sm px-4"
             :disabled="page <= 1"
             @click="emit('change', page - 1)">
-      ← Anterior
+      ← Previous
     </button>
     <span class="fw-bold text-muted">{{ page }} / {{ totalPages }}</span>
     <button class="btn btn-sc-outline btn-sm px-4"
             :disabled="page >= totalPages"
             @click="emit('change', page + 1)">
-      Siguiente →
+      Next →
     </button>
   </div>
 </template>

@@ -132,17 +132,18 @@ class SongController extends Controller
         exit;
     }
 
-    // GET /api/songs?artist=&page=&limit=
+    // GET /api/songs?artist=&genre=&page=&limit=
     public function apiList(array $vars = []): void
     {
         $artist = trim($_GET['artist'] ?? '');
+        $genre  = trim($_GET['genre']  ?? '');
         $limit  = max(1, min(50, (int) ($_GET['limit'] ?? 9)));
         $page   = max(1, (int) ($_GET['page']  ?? 1));
         $offset = ($page - 1) * $limit;
 
         $repo  = new SongRepository();
-        $songs = $repo->getSongsFiltered($artist, $offset, $limit);
-        $total = $repo->countSongs($artist);
+        $songs = $repo->getSongsFiltered($artist, $offset, $limit, $genre);
+        $total = $repo->countSongs($artist, $genre);
         $pages = (int) ceil($total / $limit);
 
         $this->json([

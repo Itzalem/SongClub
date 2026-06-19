@@ -2,12 +2,12 @@
   <div class="row justify-content-center">
     <div class="col-md-6">
       <div class="card border-0 shadow-2xl rounded-5 overflow-hidden p-5">
-        <h2 class="fw-bold mb-1">Add a song 🎵</h2>
-        <p class="text-muted mb-4">Share a new gem with the community</p>
+        <h2 class="fw-bold mb-1">Edit song 🎵</h2>
+        <p class="text-muted mb-4">Update the details of this song</p>
 
         <div v-if="error" class="alert alert-danger rounded-3">{{ error }}</div>
 
-        <form @submit.prevent="submit">
+        <form v-if="form" @submit.prevent="submit">
           <div class="mb-3">
             <label class="form-label fw-bold">Title *</label>
             <input v-model="form.title" type="text" class="form-control" required>
@@ -29,8 +29,8 @@
             <input v-model="form.link" type="url" class="form-control">
           </div>
           <div class="d-flex gap-2">
-            <router-link to="/songs" class="btn btn-light border flex-grow-1">Cancel</router-link>
-            <button class="btn btn-sc-primary flex-grow-1">Publish</button>
+            <router-link :to="`/songs/${route.params.id}`" class="btn btn-light border flex-grow-1">Cancel</router-link>
+            <button class="btn btn-sc-primary flex-grow-1">Save</button>
           </div>
         </form>
       </div>
@@ -39,21 +39,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../utils/axios'
 
+const route  = useRoute()
 const router = useRouter()
-const form   = ref({ title: '', artist: '', album: '', genre: '', link: '' })
+const form   = ref(null)
 const error  = ref('')
+
+onMounted(async () => {
+  const res = await api.get(`/api/songs/${route.params.id}`)
+  const s   = res.data
+  form.value = { title: s.title, artist: s.artist, album: s.album || '', genre: s.genre || '', link: s.link || '' }
+})
 
 async function submit() {
   error.value = ''
   try {
-    const res = await api.post('/api/songs', form.value)
-    router.push(`/songs/${res.data.id}`)
+    await api.put(`/api/songs/${route.params.id}`, form.value)
+    router.push(`/songs/${route.params.id}`)
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to create song.'
+    error.value = e.response?.data?.error || 'Failed to save changes.'
   }
 }
 </script>

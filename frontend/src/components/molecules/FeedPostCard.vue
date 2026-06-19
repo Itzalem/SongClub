@@ -10,19 +10,19 @@ const props = defineProps({
 
 const auth         = useAuthStore()
 const showComments = ref(false)
-const isLiked      = ref(false)
-const isFav        = ref(false)
-const likeCount    = ref(0)
+const isLiked      = ref(props.post.is_liked   ?? false)
+const isFav        = ref(props.post.is_favorited ?? false)
+const likeCount    = ref(props.post.like_count  ?? 0)
 
 function formatDate(dt) {
-  return new Date(dt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(dt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 async function toggleLike() {
   if (!auth.isLoggedIn) return
   const res  = await api.post(`/api/songs/${props.post.song_id}/like`)
-  isLiked.value = res.data.liked
-  likeCount.value += res.data.liked ? 1 : -1
+  isLiked.value   = res.data.liked
+  likeCount.value = res.data.count
 }
 
 async function toggleFav() {
@@ -42,7 +42,7 @@ async function toggleFav() {
 
       <div class="mb-2">
         <small class="text-muted">
-          🎶 Escuchando —
+          🎶 Listening to —
           <router-link :to="`/profile/${post.user_id}`" class="text-decoration-none fw-bold" style="color:var(--sc-olive)">
             @{{ post.username }}
           </router-link>
@@ -56,7 +56,7 @@ async function toggleFav() {
 
       <div class="d-flex gap-2 mt-3 flex-wrap">
         <a v-if="post.song_link" :href="post.song_link" target="_blank" class="btn btn-sc-primary flex-grow-1">
-          ▶ Escuchar ahora
+          ▶ Listen now
         </a>
 
         <button

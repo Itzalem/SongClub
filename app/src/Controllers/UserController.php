@@ -69,6 +69,7 @@ class UserController extends Controller
         $this->json([
             'id'       => $user->userId,
             'username' => $user->username,
+            'email'    => $user->email,
             'bio'      => $user->bio,
             'role'     => $user->role,
         ]);
@@ -107,6 +108,56 @@ class UserController extends Controller
 
         (new UserService(new UserRepository()))->deleteUser($targetId);
         $this->json(['deleted' => true]);
+    }
+
+    // PUT /api/users/{id} (JWT required, owner only)
+    public function apiUpdateProfile(array $vars = []): void
+    {
+        $tokenData = $this->validateJWT();
+        $userId    = (int) ($vars['id'] ?? 0);
+
+        if ((int) $tokenData->id !== $userId) {
+            $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        $body     = json_decode(file_get_contents('php://input'), true) ?? [];
+        $username = trim($body['username'] ?? '');
+        $email    = trim($body['email']    ?? '');
+        $bio      = trim($body['bio']      ?? '');
+
+        if ($username === '') { $this->json(['error' => 'Username is required'], 400); }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $this->json(['error' => 'Invalid email address'], 400); }
+
+        $repo = new UserRepository();
+        $user = $repo->getUserById($userId);
+        if (!$user) { $this->json(['error' => 'User not found'], 404); }
+
+        if ($username !== $user->username && $repo->getUserByUsername($username)) {
+            $this->json(['error' => 'Username already taken'], 409);
+        }
+        if ($email !== $user->email && $repo->getUserByEmail($email)) {
+            $this->json(['error' => 'Email already registered'], 409);
+        }
+
+        $user->username = $username;
+        $user->email    = $email;
+        $user->bio      = $bio ?: null;
+        (new UserService(new UserRepository()))->updateUser($user);
+
+        // Optional password change
+        $currentPassword = $body['current_password'] ?? '';
+        $newPassword     = $body['new_password']     ?? '';
+        if ($newPassword !== '') {
+            if (!password_verify($currentPassword, $user->passwordHash)) {
+                $this->json(['error' => 'Current password is incorrect'], 400);
+            }
+            if (strlen($newPassword) < 6) {
+                $this->json(['error' => 'New password must be at least 6 characters'], 400);
+            }
+            (new UserService(new UserRepository()))->changePassword($userId, $newPassword);
+        }
+
+        $this->json(['id' => $userId, 'username' => $username, 'email' => $email, 'bio' => $bio ?: null]);
     }
 
     // GET /api/users/search?q= — live user search API

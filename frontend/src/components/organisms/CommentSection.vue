@@ -19,7 +19,7 @@ async function loadComments() {
 
 async function addComment() {
   if (!text.value.trim()) return
-  await api.post(`/api/posts/${props.postId}/comments`, { body: text.value })
+  await api.post(`/api/posts/${props.postId}/comments`, { content: text.value })
   text.value = ''
   await loadComments()
 }
@@ -34,16 +34,16 @@ onMounted(loadComments)
       :key="c.id"
       :comment="c"
     />
-    <p v-if="comments.length === 0" class="text-muted small">Sin comentarios aún.</p>
+    <p v-if="comments.length === 0" class="text-muted small">No comments yet.</p>
 
     <div v-if="auth.isLoggedIn" class="d-flex gap-2 mt-3">
       <input
         v-model="text"
         class="form-control form-control-sm"
-        placeholder="Añade un comentario..."
+        placeholder="Add a comment..."
         @keyup.enter="addComment"
       />
-      <button class="btn btn-sc-primary btn-sm" @click="addComment">Enviar</button>
+      <button class="btn btn-sc-primary btn-sm" @click="addComment">Send</button>
     </div>
   </div>
 </template>

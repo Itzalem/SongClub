@@ -4,8 +4,10 @@ namespace App\Controllers;
 
 use App\Framework\Controller;
 use App\Services\PostService;
+use App\Services\FavoriteService;
 use App\Repositories\PostRepository;
 use App\Repositories\CommentRepository;
+use App\Repositories\InteractionRepository;
 use App\Models\Post;
 
 class PostController extends Controller
@@ -38,6 +40,16 @@ class PostController extends Controller
         $total = $repo->countFeed();
         $pages = (int) ceil($total / $limit) ?: 1;
 
+        // Optional auth: enrich feed with per-user like/fav state
+        $likedIds = [];
+        $favIds   = [];
+        $viewer   = $this->tryParseJWT();
+        if ($viewer) {
+            $favService = new FavoriteService(new InteractionRepository());
+            $likedIds   = array_flip($favService->getLikeIds((int) $viewer->id));
+            $favIds     = array_flip($favService->getFavoriteIds((int) $viewer->id));
+        }
+
         $data = [];
         foreach ($posts as $p) {
             $data[] = [
@@ -51,6 +63,9 @@ class PostController extends Controller
                 'song_link'     => $p->song_link,
                 'caption'       => $p->caption,
                 'comment_count' => $p->comment_count,
+                'like_count'    => $p->like_count,
+                'is_liked'      => isset($likedIds[$p->song_id]),
+                'is_favorited'  => isset($favIds[$p->song_id]),
                 'created_at'    => $p->created_at,
             ];
         }

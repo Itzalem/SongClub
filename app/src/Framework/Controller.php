@@ -39,6 +39,21 @@ abstract class Controller
         exit;
     }
 
+    // Parses the JWT if present; returns payload or null (never exits).
+    protected function tryParseJWT(): ?object
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!$header || !str_starts_with($header, 'Bearer ')) { return null; }
+        $parts = explode('.', substr($header, 7));
+        if (count($parts) !== 3) { return null; }
+        [$h, $p, $sig] = $parts;
+        $expected = rtrim(strtr(base64_encode(hash_hmac('sha256', "$h.$p", \App\Config::JWT_SECRET, true)), '+/', '-_'), '=');
+        if (!hash_equals($expected, $sig)) { return null; }
+        $data = json_decode(base64_decode(strtr($p, '-_', '+/')));
+        if (!$data || $data->exp < time()) { return null; }
+        return $data->data;
+    }
+
     // Validates the JWT from the Authorization header.
     // Returns the token payload (id, username, role) or responds 401 and exits.
     protected function validateJWT(): object

@@ -2,14 +2,14 @@
   <div class="row justify-content-center">
     <div class="col-md-5">
       <div class="card border-0 shadow-2xl rounded-5 overflow-hidden p-5">
-        <h2 class="fw-bold mb-1">Únete a SongClub 🎵</h2>
-        <p class="text-muted mb-4">Crea tu cuenta y comparte tu música</p>
+        <h2 class="fw-bold mb-1">Join SongClub 🎵</h2>
+        <p class="text-muted mb-4">Create your account and share your music</p>
 
         <div v-if="error" class="alert alert-danger rounded-3">{{ error }}</div>
 
         <form @submit.prevent="submit">
           <div class="mb-3">
-            <label class="form-label fw-bold">Nombre de usuario</label>
+            <label class="form-label fw-bold">Username</label>
             <input v-model="username" type="text" class="form-control" required>
           </div>
           <div class="mb-3">
@@ -17,19 +17,19 @@
             <input v-model="email" type="email" class="form-control" required>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">Contraseña</label>
+            <label class="form-label fw-bold">Password</label>
             <input v-model="password" type="password" class="form-control" required>
           </div>
           <div class="mb-4">
-            <label class="form-label fw-bold">Bio <span class="text-muted fw-normal">(opcional)</span></label>
-            <textarea v-model="bio" class="form-control" rows="2" placeholder="Cuéntanos sobre tu gusto musical..."></textarea>
+            <label class="form-label fw-bold">Bio <span class="text-muted fw-normal">(optional)</span></label>
+            <textarea v-model="bio" class="form-control" rows="2" placeholder="Tell us about your music taste..."></textarea>
           </div>
-          <button class="btn btn-sc-primary w-100">Crear cuenta</button>
+          <button class="btn btn-sc-primary w-100">Create account</button>
         </form>
 
         <p class="text-center mt-4 text-muted">
-          ¿Ya tienes cuenta?
-          <router-link to="/login" class="fw-bold" style="color:var(--sc-olive)">Entrar</router-link>
+          Already have an account?
+          <router-link to="/login" class="fw-bold" style="color:var(--sc-olive)">Log in</router-link>
         </p>
       </div>
     </div>
@@ -55,7 +55,7 @@ async function submit() {
     await auth.register(username.value, email.value, password.value, bio.value)
     router.push('/')
   } catch (e) {
-    error.value = e.response?.data?.error || 'Error al registrarse'
+    error.value = e.response?.data?.error || 'Registration failed.'
   }
 }
 </script>

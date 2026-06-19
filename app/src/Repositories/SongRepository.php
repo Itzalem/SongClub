@@ -26,31 +26,35 @@ class SongRepository extends Repository implements ISongRepository
         return $songs;
     }
 
-    public function getSongsFiltered(string $artist, int $offset, int $limit): array
+    public function getSongsFiltered(string $artist, int $offset, int $limit, string $genre = ''): array
     {
         $connection = $this->getConnection();
+        $conditions = [];
+        $params     = [];
 
         if ($artist !== '') {
-            $sql       = "SELECT s.*, u.username AS creator_name
-                          FROM songs s
-                          LEFT JOIN users u ON s.created_by = u.id
-                          WHERE s.artist LIKE :artist
-                          ORDER BY s.created_at DESC
-                          LIMIT :limit OFFSET :offset";
-            $statement = $connection->prepare($sql);
-            $like      = '%' . $artist . '%';
-            $statement->bindParam(':artist', $like,   PDO::PARAM_STR);
-        } else {
-            $sql       = "SELECT s.*, u.username AS creator_name
-                          FROM songs s
-                          LEFT JOIN users u ON s.created_by = u.id
-                          ORDER BY s.created_at DESC
-                          LIMIT :limit OFFSET :offset";
-            $statement = $connection->prepare($sql);
+            $conditions[] = 's.artist LIKE :artist';
+            $params[':artist'] = '%' . $artist . '%';
+        }
+        if ($genre !== '') {
+            $conditions[] = 's.genre LIKE :genre';
+            $params[':genre'] = '%' . $genre . '%';
         }
 
-        $statement->bindParam(':limit',  $limit,  PDO::PARAM_INT);
-        $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $sql   = "SELECT s.*, u.username AS creator_name
+                  FROM songs s
+                  LEFT JOIN users u ON s.created_by = u.id
+                  {$where}
+                  ORDER BY s.created_at DESC
+                  LIMIT :limit OFFSET :offset";
+
+        $statement = $connection->prepare($sql);
+        foreach ($params as $key => $val) {
+            $statement->bindValue($key, $val, PDO::PARAM_STR);
+        }
+        $statement->bindValue(':limit',  $limit,  PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
         $statement->execute();
 
         $songs = [];
@@ -60,20 +64,27 @@ class SongRepository extends Repository implements ISongRepository
         return $songs;
     }
 
-    public function countSongs(string $artist): int
+    public function countSongs(string $artist, string $genre = ''): int
     {
         $connection = $this->getConnection();
+        $conditions = [];
+        $params     = [];
 
         if ($artist !== '') {
-            $sql       = "SELECT COUNT(*) FROM songs WHERE artist LIKE :artist";
-            $statement = $connection->prepare($sql);
-            $like      = '%' . $artist . '%';
-            $statement->bindParam(':artist', $like, PDO::PARAM_STR);
-        } else {
-            $sql       = "SELECT COUNT(*) FROM songs";
-            $statement = $connection->prepare($sql);
+            $conditions[] = 'artist LIKE :artist';
+            $params[':artist'] = '%' . $artist . '%';
+        }
+        if ($genre !== '') {
+            $conditions[] = 'genre LIKE :genre';
+            $params[':genre'] = '%' . $genre . '%';
         }
 
+        $where     = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $sql       = "SELECT COUNT(*) FROM songs {$where}";
+        $statement = $connection->prepare($sql);
+        foreach ($params as $key => $val) {
+            $statement->bindValue($key, $val, PDO::PARAM_STR);
+        }
         $statement->execute();
         return (int) $statement->fetchColumn();
     }

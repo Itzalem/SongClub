@@ -31,10 +31,10 @@ CREATE TABLE IF NOT EXISTS songs (
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Last-listened posts (one per user)
+-- Posts feed (multiple per user)
 CREATE TABLE IF NOT EXISTS posts (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT NOT NULL UNIQUE,
+    user_id    INT NOT NULL,
     song_id    INT NOT NULL,
     caption    TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

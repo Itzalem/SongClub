@@ -1,11 +1,10 @@
 <template>
   <div v-if="!profileUser" class="text-center py-5 opacity-50">
-    <p class="fs-4">Cargando perfil...</p>
+    <p class="fs-4">Loading profile...</p>
   </div>
 
   <div v-else class="row justify-content-center">
 
-    <!-- Header del perfil -->
     <div class="col-lg-10 mb-5">
       <div class="bg-white p-4 p-md-5 rounded-5 shadow-sm border d-md-flex align-items-center text-center text-md-start">
         <div class="profile-avatar shadow-lg mb-3 mb-md-0 me-md-5">
@@ -13,7 +12,8 @@
         </div>
         <div class="flex-grow-1">
           <h1 class="fw-bold mb-2">{{ profileUser.username }}</h1>
-          <p class="text-muted fs-5 mb-0">{{ profileUser.bio || 'Amante de la música en SongClub.' }}</p>
+          <p class="text-muted fs-5 mb-0">{{ profileUser.bio || 'Music lover on SongClub.' }}</p>
+          <router-link v-if="isOwner" :to="`/profile/${userId}/edit`" class="btn btn-sc-outline btn-sm mt-3">Edit Profile</router-link>
         </div>
         <div class="d-flex gap-4 justify-content-center mt-4 mt-md-0 ps-md-5">
           <div class="text-center">
@@ -24,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="col-lg-10">
       <ul class="nav nav-pills mb-5 gap-2">
         <li class="nav-item">
@@ -32,14 +31,14 @@
             class="btn"
             :class="activeTab === 'feed' ? 'btn-sc-primary' : 'btn-sc-outline'"
             @click="activeTab = 'feed'"
-          >🎵 Muro</button>
+          >🎵 Wall</button>
         </li>
         <li class="nav-item">
           <button
             class="btn"
             :class="activeTab === 'favs' ? 'btn-sc-primary' : 'btn-sc-outline'"
             @click="activeTab = 'favs'"
-          >★ Favoritos</button>
+          >★ Favorites</button>
         </li>
         <li v-if="isOwner" class="nav-item">
           <button
@@ -51,16 +50,14 @@
       </ul>
     </div>
 
-    <!-- Tab: Muro -->
     <div v-if="activeTab === 'feed'" class="col-lg-7">
 
-      <!-- Formulario para publicar (solo owner) -->
       <div v-if="isOwner" class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
         <div class="card-body p-4" style="background:var(--sc-olive-soft)">
-          <h6 class="fw-bold mb-3">¿Qué canción define tu día hoy?</h6>
+          <h6 class="fw-bold mb-3">What song defines your day today?</h6>
           <form @submit.prevent="submitPost">
             <select v-model="postSongId" class="form-select border-0 shadow-sm mb-3" required>
-              <option value="">Selecciona de la lista...</option>
+              <option value="">Select from the list...</option>
               <option v-for="s in allSongs" :key="s.id" :value="s.id">
                 {{ s.title }} — {{ s.artist }}
               </option>
@@ -69,9 +66,9 @@
               v-model="postCaption"
               class="form-control border-0 shadow-sm mb-3"
               rows="2"
-              placeholder="Añade un comentario..."
+              placeholder="Add a caption..."
             ></textarea>
-            <button type="submit" class="btn btn-sc-primary w-100">Publicar en mi muro</button>
+            <button type="submit" class="btn btn-sc-primary w-100">Post to my wall</button>
           </form>
         </div>
       </div>
@@ -80,18 +77,16 @@
 
       <div v-if="posts.length === 0" class="text-center py-5 opacity-25">
         <span class="display-1">🌑</span>
-        <p class="fs-4 mt-3">No hay actividad reciente en este muro.</p>
+        <p class="fs-4 mt-3">No recent activity on this wall.</p>
       </div>
     </div>
 
-    <!-- Tab: Favoritos -->
     <div v-if="activeTab === 'favs'" class="col-lg-10">
-      <FavoritesSection :user-id="userId" type="favorites" title="Favoritos ★" />
+      <FavoritesSection :user-id="userId" type="favorites" title="Favorites ★" :is-owner="isOwner" />
     </div>
 
-    <!-- Tab: Likes (solo owner) -->
     <div v-if="activeTab === 'liked' && isOwner" class="col-lg-10">
-      <FavoritesSection :user-id="userId" type="liked" title="Mis Likes ♥" />
+      <FavoritesSection :user-id="userId" type="liked" title="My Likes ♥" :is-owner="isOwner" />
     </div>
 
   </div>
