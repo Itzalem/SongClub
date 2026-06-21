@@ -11,20 +11,25 @@ use App\Models\ESongType;
 
 class FavoriteController extends Controller
 {
+    private FavoriteService $favoriteService;
+
+    public function __construct()
+    {
+        $this->favoriteService = new FavoriteService(new InteractionRepository());
+    }
+
     public function toggle(array $vars = []): void
     {
         $this->requireAuth();
 
-        $body   = json_decode(file_get_contents('php://input'), true);
+        $body   = $this->getBody();
         $songId = (int) ($body['song_id'] ?? 0);
 
         if (!$songId) {
-            $this->json(['error' => 'Invalid song'], 400);
+            $this->json(['error' => 'Invalid song ID.'], 400);
         }
 
-        $service = new FavoriteService(new InteractionRepository());
-        $added   = $service->toggleFavorite((int) $_SESSION['user_id'], $songId);
-
+        $added = $this->favoriteService->toggleFavorite((int) $_SESSION['user_id'], $songId);
         $this->json(['favorited' => $added]);
     }
 
@@ -32,21 +37,19 @@ class FavoriteController extends Controller
     {
         $this->requireAuth();
 
-        $body   = json_decode(file_get_contents('php://input'), true);
+        $body   = $this->getBody();
         $songId = (int) ($body['song_id'] ?? 0);
 
         if (!$songId) {
-            $this->json(['error' => 'Invalid song'], 400);
+            $this->json(['error' => 'Invalid song ID.'], 400);
         }
 
-        $service = new FavoriteService(new InteractionRepository());
-        $added   = $service->toggleLike((int) $_SESSION['user_id'], $songId);
-        $count   = $service->getLikeCount($songId);
-
+        $added = $this->favoriteService->toggleLike((int) $_SESSION['user_id'], $songId);
+        $count = $this->favoriteService->getLikeCount($songId);
         $this->json(['liked' => $added, 'count' => $count]);
     }
 
-    // GET /profile/{id}/favorites — full favorites list for a user
+    // GET /profile/{id}/favorites
     public function userFavorites(array $vars = []): void
     {
         $this->requireAuth();
@@ -65,15 +68,13 @@ class FavoriteController extends Controller
         $currentUserId = (int) ($_SESSION['user_id'] ?? 0);
         $isOwner       = ($currentUserId === $profileUserId);
 
-        $favService = new FavoriteService(new InteractionRepository());
-        $songs      = $favService->getFavoritesByUser($profileUserId);
+        $songs = $this->favoriteService->getFavoritesByUser($profileUserId);
 
-        // Viewer's own like/fav states (for the "add to my list" buttons)
         $viewerLikedIds = [];
         $viewerFavIds   = [];
         if (!$isOwner) {
-            $viewerLikedIds = $favService->getLikeIds($currentUserId);
-            $viewerFavIds   = $favService->getFavoriteIds($currentUserId);
+            $viewerLikedIds = $this->favoriteService->getLikeIds($currentUserId);
+            $viewerFavIds   = $this->favoriteService->getFavoriteIds($currentUserId);
         }
 
         $this->render('Songs/FavoriteSongs', [
@@ -85,21 +86,19 @@ class FavoriteController extends Controller
         ]);
     }
 
-    // GET /profile/{id}/liked — liked songs list (owner only)
+    // GET /profile/{id}/liked
     public function userLiked(array $vars = []): void
     {
         $this->requireAuth();
 
         $profileUserId = (int) ($vars['id'] ?? 0);
 
-        // Only the owner can view their liked songs
         if ((int) $_SESSION['user_id'] !== $profileUserId) {
             header('Location: /profile/' . $profileUserId);
             exit;
         }
 
-        $favService = new FavoriteService(new InteractionRepository());
-        $songs      = $favService->getLikesByUser($profileUserId);
+        $songs = $this->favoriteService->getLikesByUser($profileUserId);
 
         $this->render('Songs/LikedSongs', ['songs' => $songs]);
     }
@@ -109,9 +108,7 @@ class FavoriteController extends Controller
     {
         $userId = (int) ($vars['id'] ?? 0);
         $artist = trim($_GET['artist'] ?? '');
-        $limit  = max(1, min(50, (int) ($_GET['limit'] ?? 10)));
-        $page   = max(1, (int) ($_GET['page']  ?? 1));
-        $offset = ($page - 1) * $limit;
+        ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(10);
 
         $repo  = new InteractionRepository();
         $songs = $repo->getSongsByUserFiltered($userId, ESongType::FAVORITE, $artist, $offset, $limit);
@@ -131,13 +128,11 @@ class FavoriteController extends Controller
         $userId    = (int) ($vars['id'] ?? 0);
 
         if ($tokenData->id !== $userId && $tokenData->role !== 'admin') {
-            $this->json(['error' => 'Forbidden'], 403);
+            $this->json(['error' => 'Forbidden.'], 403);
         }
 
         $artist = trim($_GET['artist'] ?? '');
-        $limit  = max(1, min(50, (int) ($_GET['limit'] ?? 10)));
-        $page   = max(1, (int) ($_GET['page']  ?? 1));
-        $offset = ($page - 1) * $limit;
+        ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(10);
 
         $repo  = new InteractionRepository();
         $songs = $repo->getSongsByUserFiltered($userId, ESongType::LIKED, $artist, $offset, $limit);
@@ -155,8 +150,7 @@ class FavoriteController extends Controller
     {
         $tokenData = $this->validateJWT();
         $songId    = (int) ($vars['id'] ?? 0);
-        $service   = new FavoriteService(new InteractionRepository());
-        $added     = $service->toggleFavorite((int) $tokenData->id, $songId);
+        $added     = $this->favoriteService->toggleFavorite((int) $tokenData->id, $songId);
         $this->json(['favorited' => $added]);
     }
 
@@ -165,9 +159,8 @@ class FavoriteController extends Controller
     {
         $tokenData = $this->validateJWT();
         $songId    = (int) ($vars['id'] ?? 0);
-        $service   = new FavoriteService(new InteractionRepository());
-        $added     = $service->toggleLike((int) $tokenData->id, $songId);
-        $count     = $service->getLikeCount($songId);
+        $added     = $this->favoriteService->toggleLike((int) $tokenData->id, $songId);
+        $count     = $this->favoriteService->getLikeCount($songId);
         $this->json(['liked' => $added, 'count' => $count]);
     }
 
@@ -183,7 +176,7 @@ class FavoriteController extends Controller
         ];
     }
 
-    // API — export favorites as JSON download
+    // API - export favorites as JSON download
     public function export(array $vars = []): void
     {
         $this->requireAuth();
@@ -191,24 +184,12 @@ class FavoriteController extends Controller
         $userId = (int) ($vars['userId'] ?? 0);
 
         if ((int) $_SESSION['user_id'] !== $userId && $_SESSION['role'] !== 'admin') {
-            $this->json(['error' => 'Forbidden'], 403);
+            $this->json(['error' => 'Forbidden.'], 403);
         }
 
-        $favorites = (new InteractionRepository())->getSongsByUser($userId, ESongType::FAVORITE);
-
-        $result = [];
-        foreach ($favorites as $s) {
-            $result[] = [
-                'id'     => $s->id,
-                'title'  => $s->title,
-                'artist' => $s->artist,
-                'album'  => $s->album,
-                'genre'  => $s->genre,
-                'link'   => $s->link,
-            ];
-        }
+        $favorites = $this->favoriteService->getFavoritesByUser($userId);
 
         header('Content-Disposition: attachment; filename="favorites.json"');
-        $this->json($result);
+        $this->json(array_map([$this, 'songToArray'], $favorites));
     }
 }

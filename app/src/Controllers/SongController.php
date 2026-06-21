@@ -7,21 +7,27 @@ use App\Services\SongService;
 use App\Services\FavoriteService;
 use App\Repositories\SongRepository;
 use App\Repositories\InteractionRepository;
-use App\Models\ESongType;
 
 class SongController extends Controller
 {
+    private SongService $songService;
+    private FavoriteService $favoriteService;
+
+    public function __construct()
+    {
+        $this->songService     = new SongService(new SongRepository());
+        $this->favoriteService = new FavoriteService(new InteractionRepository());
+    }
+
     public function index(array $vars = []): void
     {
-        $service  = new SongService(new SongRepository());
-        $songs    = $service->getAll();
+        $songs    = $this->songService->getAll();
         $likedIds = [];
         $favIds   = [];
 
         if (isset($_SESSION['user_id'])) {
-            $favService = new FavoriteService(new InteractionRepository());
-            $likedIds   = $favService->getLikeIds((int) $_SESSION['user_id']);
-            $favIds     = $favService->getFavoriteIds((int) $_SESSION['user_id']);
+            $likedIds = $this->favoriteService->getLikeIds((int) $_SESSION['user_id']);
+            $favIds   = $this->favoriteService->getFavoriteIds((int) $_SESSION['user_id']);
         }
 
         $this->render('Index', [
@@ -33,8 +39,7 @@ class SongController extends Controller
 
     public function show(array $vars = []): void
     {
-        $service = new SongService(new SongRepository());
-        $song    = $service->getById((int) $vars['id']);
+        $song = $this->songService->getById((int) $vars['id']);
 
         if (!$song) {
             http_response_code(404);
@@ -42,15 +47,13 @@ class SongController extends Controller
             return;
         }
 
-        $favService = new FavoriteService(new InteractionRepository());
-        $likeCount  = $favService->getLikeCount($song->id);
-        $isLiked    = false;
-        $isFav      = false;
+        $likeCount = $this->favoriteService->getLikeCount($song->id);
+        $isLiked   = false;
+        $isFav     = false;
 
         if (isset($_SESSION['user_id'])) {
-            $repo    = new InteractionRepository();
-            $isLiked = $repo->has((int) $_SESSION['user_id'], $song->id, ESongType::LIKED);
-            $isFav   = $repo->has((int) $_SESSION['user_id'], $song->id, ESongType::FAVORITE);
+            $isLiked = in_array($song->id, $this->favoriteService->getLikeIds((int) $_SESSION['user_id']));
+            $isFav   = in_array($song->id, $this->favoriteService->getFavoriteIds((int) $_SESSION['user_id']));
         }
 
         $this->render('Songs/Show', [
@@ -73,8 +76,7 @@ class SongController extends Controller
             if ($title === '' || $artist === '') {
                 $error = 'Title and artist are required.';
             } else {
-                $service = new SongService(new SongRepository());
-                $service->create($_POST, (int) $_SESSION['user_id']);
+                $this->songService->create($_POST, (int) $_SESSION['user_id']);
                 header('Location: /songs');
                 exit;
             }
@@ -86,8 +88,7 @@ class SongController extends Controller
     public function edit(array $vars = []): void
     {
         $this->requireAuth();
-        $service = new SongService(new SongRepository());
-        $song    = $service->getById((int) $vars['id']);
+        $song = $this->songService->getById((int) $vars['id']);
 
         if (!$song) {
             header('Location: /songs');
@@ -109,7 +110,7 @@ class SongController extends Controller
                 $error = 'Title and artist are required.';
             } else {
                 $_POST['id'] = $song->id;
-                $service->update($_POST);
+                $this->songService->update($_POST);
                 header('Location: /songs/' . $song->id);
                 exit;
             }
@@ -121,30 +122,25 @@ class SongController extends Controller
     public function delete(array $vars = []): void
     {
         $this->requireAuth();
-        $service = new SongService(new SongRepository());
-        $song    = $service->getById((int) $vars['id']);
+        $song = $this->songService->getById((int) $vars['id']);
 
         if ($song && ((int) $song->created_by === (int) $_SESSION['user_id'] || $_SESSION['role'] === 'admin')) {
-            $service->delete((int) $vars['id']);
+            $this->songService->delete((int) $vars['id']);
         }
 
         header('Location: /songs');
         exit;
     }
 
-    // GET /api/songs?artist=&genre=&page=&limit=
+    // GET /api/songs?artist=&page=&limit=
     public function apiList(array $vars = []): void
     {
         $artist = trim($_GET['artist'] ?? '');
-        $genre  = trim($_GET['genre']  ?? '');
-        $limit  = max(1, min(50, (int) ($_GET['limit'] ?? 9)));
-        $page   = max(1, (int) ($_GET['page']  ?? 1));
-        $offset = ($page - 1) * $limit;
+        ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(9);
 
-        $repo  = new SongRepository();
-        $songs = $repo->getSongsFiltered($artist, $offset, $limit, $genre);
-        $total = $repo->countSongs($artist, $genre);
-        $pages = (int) ceil($total / $limit);
+        $songs = $this->songService->getSongsFiltered($artist, $offset, $limit);
+        $total = $this->songService->countSongs($artist);
+        $pages = (int) ceil($total / $limit) ?: 1;
 
         $this->json([
             'data' => array_map([$this, 'songToArray'], $songs),
@@ -155,13 +151,13 @@ class SongController extends Controller
     // GET /api/songs/{id}
     public function apiShow(array $vars = []): void
     {
-        $repo = new SongRepository();
-        $song = $repo->getSongsById((int) $vars['id']);
-        if (!$song) { $this->json(['error' => 'Not found'], 404); }
+        $song = $this->songService->getById((int) $vars['id']);
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
+        }
 
-        $favService = new FavoriteService(new InteractionRepository());
-        $data       = $this->songToArray($song);
-        $data['like_count'] = $favService->getLikeCount($song->id);
+        $data               = $this->songToArray($song);
+        $data['like_count'] = $this->favoriteService->getLikeCount($song->id);
 
         $this->json($data);
     }
@@ -170,16 +166,17 @@ class SongController extends Controller
     public function apiCreate(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body      = $this->getBody();
+        $title     = trim($body['title']  ?? '');
+        $artist    = trim($body['artist'] ?? '');
 
-        $title  = trim($body['title']  ?? '');
-        $artist = trim($body['artist'] ?? '');
-        if ($title === '' || $artist === '') { $this->json(['error' => 'Title and artist are required'], 400); }
+        if ($title === '' || $artist === '') {
+            $this->json(['error' => 'Title and artist are required.'], 400);
+        }
 
-        $service = new SongService(new SongRepository());
-        $id      = $service->create($body, (int) $tokenData->id);
+        $id   = $this->songService->create($body, (int) $tokenData->id);
+        $song = $this->songService->getById($id);
 
-        $song = (new SongRepository())->getSongsById($id);
         $this->json($this->songToArray($song), 201);
     }
 
@@ -187,40 +184,38 @@ class SongController extends Controller
     public function apiUpdate(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        $repo      = new SongRepository();
-        $song      = $repo->getSongsById((int) $vars['id']);
+        $song      = $this->songService->getById((int) $vars['id']);
 
-        if (!$song) { $this->json(['error' => 'Not found'], 404); }
-        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
-            $this->json(['error' => 'Forbidden'], 403);
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
         }
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
-        (new SongService($repo))->update(array_merge($body, ['id' => $song->id]));
+        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
 
-        $this->json($this->songToArray($repo->getSongsById($song->id)));
+        $body = $this->getBody();
+        $this->songService->update(array_merge($body, ['id' => $song->id]));
+
+        $this->json($this->songToArray($this->songService->getById($song->id)));
     }
 
     // DELETE /api/songs/{id} (JWT required)
     public function apiDelete(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        $repo      = new SongRepository();
-        $song      = $repo->getSongsById((int) $vars['id']);
+        $song      = $this->songService->getById((int) $vars['id']);
 
-        if (!$song) { $this->json(['error' => 'Not found'], 404); }
-        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
-            $this->json(['error' => 'Forbidden'], 403);
+        if (!$song) {
+            $this->json(['error' => 'Song not found.'], 404);
         }
 
-        (new SongService($repo))->delete($song->id);
-        $this->json(['deleted' => true]);
-    }
+        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
 
-    // API — returns all songs as JSON (legacy, kept for backward compatibility)
-    public function apiIndex(array $vars = []): void
-    {
-        $this->apiList($vars);
+        $this->songService->delete($song->id);
+        $this->json(['deleted' => true]);
     }
 
     private function songToArray(\App\Models\Song $s): array

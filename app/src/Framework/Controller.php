@@ -39,50 +39,34 @@ abstract class Controller
         exit;
     }
 
-    // Parses the JWT if present; returns payload or null (never exits).
-    protected function tryParseJWT(): ?object
+    protected function validateJWT(): object
     {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (!$header || !str_starts_with($header, 'Bearer ')) { return null; }
-        $parts = explode('.', substr($header, 7));
-        if (count($parts) !== 3) { return null; }
-        [$h, $p, $sig] = $parts;
-        $expected = rtrim(strtr(base64_encode(hash_hmac('sha256', "$h.$p", \App\Config::JWT_SECRET, true)), '+/', '-_'), '=');
-        if (!hash_equals($expected, $sig)) { return null; }
-        $data = json_decode(base64_decode(strtr($p, '-_', '+/')));
-        if (!$data || $data->exp < time()) { return null; }
-        return $data->data;
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            $this->json(['error' => 'No token provided.'], 401);
+        }
+
+        $token = substr($header, 7);
+
+        try {
+            $decoded = JwtHelper::decode($token);
+            return $decoded->data;
+        } catch (\Exception $e) {
+            $this->json(['error' => 'Invalid or expired token.'], 401);
+        }
     }
 
-    // Validates the JWT from the Authorization header.
-    // Returns the token payload (id, username, role) or responds 401 and exits.
-    protected function validateJWT(): object
-{
-    $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-
-    if (!$header || !str_starts_with($header, 'Bearer ')) {
-        $this->json(['error' => 'No token provided'], 401);
+    protected function getBody(): array
+    {
+        return json_decode(file_get_contents('php://input'), true) ?? [];
     }
 
-    $parts = explode('.', substr($header, 7));
-
-    if (count($parts) !== 3) {
-        $this->json(['error' => 'Invalid token'], 401);
+    protected function getPagination(int $defaultLimit = 10): array
+    {
+        $limit  = max(1, min(50, (int) ($_GET['limit'] ?? $defaultLimit)));
+        $page   = max(1, (int) ($_GET['page']  ?? 1));
+        $offset = ($page - 1) * $limit;
+        return ['page' => $page, 'limit' => $limit, 'offset' => $offset];
     }
-
-    [$h, $p, $sig] = $parts;
-    $expected = rtrim(strtr(base64_encode(hash_hmac('sha256', "$h.$p", \App\Config::JWT_SECRET, true)), '+/', '-_'), '=');
-
-    if (!hash_equals($expected, $sig)) {
-        $this->json(['error' => 'Invalid token signature'], 401);
-    }
-
-    $data = json_decode(base64_decode(strtr($p, '-_', '+/')));
-
-    if (!$data || $data->exp < time()) {
-        $this->json(['error' => 'Token expired'], 401);
-    }
-
-    return $data->data;
-}
 }

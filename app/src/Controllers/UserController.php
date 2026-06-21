@@ -8,33 +8,36 @@ use App\Repositories\UserRepository;
 
 class UserController extends Controller
 {
-    // GET /admin/users — admin panel: list all users
+    private UserService $userService;
+
+    public function __construct()
+    {
+        $this->userService = new UserService(new UserRepository());
+    }
+
+    // GET /admin/users
     public function index(array $vars = []): void
     {
         $this->requireAdmin();
-
-        $users = (new UserService(new UserRepository()))->getAllUsers();
-
-        $this->render('Admin', ['users' => $users]);
+        $this->render('Admin', ['users' => $this->userService->getAllUsers()]);
     }
 
-    // POST /admin/users/{id}/delete — admin deletes a user
+    // POST /admin/users/{id}/delete
     public function delete(array $vars = []): void
     {
         $this->requireAdmin();
 
         $targetId = (int) ($vars['id'] ?? 0);
 
-        // Prevent admin from deleting themselves
         if ($targetId > 0 && $targetId !== (int) $_SESSION['user_id']) {
-            (new UserService(new UserRepository()))->deleteUser($targetId);
+            $this->userService->deleteUser($targetId);
         }
 
         header('Location: /admin/users');
         exit;
     }
 
-    // POST /profile/update — update own profile
+    // POST /profile/update
     public function update(array $vars = []): void
     {
         $this->requireAuth();
@@ -47,13 +50,12 @@ class UserController extends Controller
             exit;
         }
 
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById((int) $_SESSION['user_id']);
+        $user = $this->userService->getUserById((int) $_SESSION['user_id']);
 
         if ($user) {
             $user->username       = $username;
             $user->bio            = $bio ?: null;
-            $userService->updateUser($user);
+            $this->userService->updateUser($user);
             $_SESSION['username'] = $username;
         }
 
@@ -61,15 +63,16 @@ class UserController extends Controller
         exit;
     }
 
-    // GET /api/users/{id} — public profile info
+    // GET /api/users/{id}
     public function apiShow(array $vars = []): void
     {
-        $user = (new UserService(new UserRepository()))->getUserById((int) $vars['id']);
-        if (!$user) { $this->json(['error' => 'User not found'], 404); }
+        $user = $this->userService->getUserById((int) $vars['id']);
+        if (!$user) {
+            $this->json(['error' => 'User not found.'], 404);
+        }
         $this->json([
             'id'       => $user->userId,
             'username' => $user->username,
-            'email'    => $user->email,
             'bio'      => $user->bio,
             'role'     => $user->role,
         ]);
@@ -79,104 +82,49 @@ class UserController extends Controller
     public function apiAdminList(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        if ($tokenData->role !== 'admin') { $this->json(['error' => 'Forbidden'], 403); }
-
-        $users  = (new UserService(new UserRepository()))->getAllUsers();
-        $result = [];
-        foreach ($users as $u) {
-            $result[] = [
-                'id'       => $u->userId,
-                'username' => $u->username,
-                'email'    => $u->email,
-                'role'     => $u->role,
-                'bio'      => $u->bio,
-            ];
+        if ($tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
         }
-        $this->json($result);
+
+        $users = $this->userService->getAllUsers();
+        $this->json(array_map(fn($u) => [
+            'id'       => $u->userId,
+            'username' => $u->username,
+            'email'    => $u->email,
+            'role'     => $u->role,
+            'bio'      => $u->bio,
+        ], $users));
     }
 
     // DELETE /api/admin/users/{id} (JWT + admin required)
     public function apiAdminDelete(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        if ($tokenData->role !== 'admin') { $this->json(['error' => 'Forbidden'], 403); }
+        if ($tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
 
         $targetId = (int) ($vars['id'] ?? 0);
         if ($targetId === (int) $tokenData->id) {
-            $this->json(['error' => 'Cannot delete yourself'], 400);
+            $this->json(['error' => 'Cannot delete yourself.'], 400);
         }
 
-        (new UserService(new UserRepository()))->deleteUser($targetId);
+        $this->userService->deleteUser($targetId);
         $this->json(['deleted' => true]);
     }
 
-    // PUT /api/users/{id} (JWT required, owner only)
-    public function apiUpdateProfile(array $vars = []): void
-    {
-        $tokenData = $this->validateJWT();
-        $userId    = (int) ($vars['id'] ?? 0);
-
-        if ((int) $tokenData->id !== $userId) {
-            $this->json(['error' => 'Forbidden'], 403);
-        }
-
-        $body     = json_decode(file_get_contents('php://input'), true) ?? [];
-        $username = trim($body['username'] ?? '');
-        $email    = trim($body['email']    ?? '');
-        $bio      = trim($body['bio']      ?? '');
-
-        if ($username === '') { $this->json(['error' => 'Username is required'], 400); }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $this->json(['error' => 'Invalid email address'], 400); }
-
-        $repo = new UserRepository();
-        $user = $repo->getUserById($userId);
-        if (!$user) { $this->json(['error' => 'User not found'], 404); }
-
-        if ($username !== $user->username && $repo->getUserByUsername($username)) {
-            $this->json(['error' => 'Username already taken'], 409);
-        }
-        if ($email !== $user->email && $repo->getUserByEmail($email)) {
-            $this->json(['error' => 'Email already registered'], 409);
-        }
-
-        $user->username = $username;
-        $user->email    = $email;
-        $user->bio      = $bio ?: null;
-        (new UserService(new UserRepository()))->updateUser($user);
-
-        // Optional password change
-        $currentPassword = $body['current_password'] ?? '';
-        $newPassword     = $body['new_password']     ?? '';
-        if ($newPassword !== '') {
-            if (!password_verify($currentPassword, $user->passwordHash)) {
-                $this->json(['error' => 'Current password is incorrect'], 400);
-            }
-            if (strlen($newPassword) < 6) {
-                $this->json(['error' => 'New password must be at least 6 characters'], 400);
-            }
-            (new UserService(new UserRepository()))->changePassword($userId, $newPassword);
-        }
-
-        $this->json(['id' => $userId, 'username' => $username, 'email' => $email, 'bio' => $bio ?: null]);
-    }
-
-    // GET /api/users/search?q= — live user search API
+    // GET /api/users/search?q=
     public function search(array $vars = []): void
     {
         $this->requireAuth();
 
-        $query  = trim($_GET['q'] ?? '');
-        $users  = (new UserService(new UserRepository()))->search($query);
-        $result = [];
+        $query = trim($_GET['q'] ?? '');
+        $users = $this->userService->search($query);
 
-        foreach ($users as $u) {
-            $result[] = [
-                'id'       => $u->userId,
-                'username' => htmlspecialchars($u->username, ENT_QUOTES, 'UTF-8'),
-                'bio'      => htmlspecialchars($u->bio ?? '', ENT_QUOTES, 'UTF-8'),
-            ];
-        }
-
-        $this->json($result);
+        $this->json(array_map(fn($u) => [
+            'id'       => $u->userId,
+            'username' => htmlspecialchars($u->username, ENT_QUOTES, 'UTF-8'),
+            'bio'      => htmlspecialchars($u->bio ?? '', ENT_QUOTES, 'UTF-8'),
+        ], $users));
     }
 }

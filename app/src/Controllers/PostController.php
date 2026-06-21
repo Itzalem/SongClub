@@ -4,14 +4,21 @@ namespace App\Controllers;
 
 use App\Framework\Controller;
 use App\Services\PostService;
-use App\Services\FavoriteService;
+use App\Services\CommentService;
 use App\Repositories\PostRepository;
 use App\Repositories\CommentRepository;
-use App\Repositories\InteractionRepository;
-use App\Models\Post;
 
 class PostController extends Controller
 {
+    private PostService    $postService;
+    private CommentService $commentService;
+
+    public function __construct()
+    {
+        $this->postService    = new PostService(new PostRepository());
+        $this->commentService = new CommentService(new CommentRepository());
+    }
+
     public function set(array $vars = []): void
     {
         $this->requireAuth();
@@ -20,8 +27,7 @@ class PostController extends Controller
         $caption = trim($_POST['caption'] ?? '');
 
         if ($songId > 0) {
-            $service = new PostService(new PostRepository());
-            $service->createPost((int) $_SESSION['user_id'], $songId, $caption ?: null);
+            $this->postService->createPost((int) $_SESSION['user_id'], $songId, $caption ?: null);
         }
 
         header('Location: /profile/' . (int) $_SESSION['user_id']);
@@ -31,47 +37,14 @@ class PostController extends Controller
     // GET /api/feed?page=&limit=
     public function apiFeed(array $vars = []): void
     {
-        $limit  = max(1, min(50, (int) ($_GET['limit'] ?? 10)));
-        $page   = max(1, (int) ($_GET['page']  ?? 1));
-        $offset = ($page - 1) * $limit;
+        ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(10);
 
-        $repo  = new PostRepository();
-        $posts = $repo->getFeed($offset, $limit);
-        $total = $repo->countFeed();
+        $posts = $this->postService->getFeed($offset, $limit);
+        $total = $this->postService->countFeed();
         $pages = (int) ceil($total / $limit) ?: 1;
 
-        // Optional auth: enrich feed with per-user like/fav state
-        $likedIds = [];
-        $favIds   = [];
-        $viewer   = $this->tryParseJWT();
-        if ($viewer) {
-            $favService = new FavoriteService(new InteractionRepository());
-            $likedIds   = array_flip($favService->getLikeIds((int) $viewer->id));
-            $favIds     = array_flip($favService->getFavoriteIds((int) $viewer->id));
-        }
-
-        $data = [];
-        foreach ($posts as $p) {
-            $data[] = [
-                'id'            => $p->id,
-                'user_id'       => $p->user_id,
-                'username'      => $p->username,
-                'song_id'       => $p->song_id,
-                'song_title'    => $p->song_title,
-                'song_artist'   => $p->song_artist,
-                'song_genre'    => $p->song_genre,
-                'song_link'     => $p->song_link,
-                'caption'       => $p->caption,
-                'comment_count' => $p->comment_count,
-                'like_count'    => $p->like_count,
-                'is_liked'      => isset($likedIds[$p->song_id]),
-                'is_favorited'  => isset($favIds[$p->song_id]),
-                'created_at'    => $p->created_at,
-            ];
-        }
-
         $this->json([
-            'data' => $data,
+            'data' => array_map([$this, 'postToArray'], $posts),
             'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'total_pages' => $pages],
         ]);
     }
@@ -80,35 +53,45 @@ class PostController extends Controller
     public function apiSet(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
-        $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body      = $this->getBody();
         $songId    = (int) ($body['song_id'] ?? 0);
         $caption   = trim($body['caption'] ?? '');
 
-        if (!$songId) { $this->json(['error' => 'song_id required'], 400); }
+        if (!$songId) {
+            $this->json(['error' => 'song_id is required.'], 400);
+        }
 
-        $service = new PostService(new PostRepository());
-        $id      = $service->createPost((int) $tokenData->id, $songId, $caption ?: null);
+        $this->postService->createPost((int) $tokenData->id, $songId, $caption ?: null);
 
-        $this->json(['id' => $id, 'created' => true], 201);
+        $posts = $this->postService->getAllByUser((int) $tokenData->id);
+        $post  = $posts[0] ?? null;
+
+        if (!$post) {
+            $this->json(['error' => 'Post could not be created.'], 500);
+        }
+
+        $this->json($this->postToArray($post), 201);
     }
 
     // GET /api/posts/{id}/comments
     public function apiGetComments(array $vars = []): void
     {
-        $postId   = (int) ($vars['id'] ?? 0);
-        $comments = (new CommentRepository())->getCommentsByPost($postId);
-        $data     = [];
-        foreach ($comments as $c) {
-            $data[] = [
-                'id'         => $c->id,
-                'post_id'    => $c->post_id,
-                'user_id'    => $c->user_id,
-                'username'   => $c->username ?? '',
-                'content'    => $c->content,
-                'created_at' => $c->created_at,
-            ];
+        $postId = (int) ($vars['id'] ?? 0);
+
+        if (!$postId) {
+            $this->json(['error' => 'Invalid post ID.'], 400);
         }
-        $this->json($data);
+
+        $comments = $this->commentService->getByPost($postId);
+
+        $this->json(array_map(fn($c) => [
+            'id'         => $c->id,
+            'post_id'    => $c->post_id,
+            'user_id'    => $c->user_id,
+            'username'   => $c->username ?? '',
+            'content'    => $c->content,
+            'created_at' => $c->created_at,
+        ], $comments));
     }
 
     // POST /api/posts/{id}/comments (JWT required)
@@ -116,13 +99,18 @@ class PostController extends Controller
     {
         $tokenData = $this->validateJWT();
         $postId    = (int) ($vars['id'] ?? 0);
-        $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body      = $this->getBody();
         $content   = trim($body['content'] ?? '');
 
-        if (!$content) { $this->json(['error' => 'content required'], 400); }
+        if (!$postId) {
+            $this->json(['error' => 'Invalid post ID.'], 400);
+        }
 
-        $repo = new CommentRepository();
-        $id   = $repo->createComment($postId, (int) $tokenData->id, $content);
+        if (!$content) {
+            $this->json(['error' => 'Content is required.'], 400);
+        }
+
+        $id = $this->commentService->addComment($postId, (int) $tokenData->id, $content);
 
         $this->json([
             'id'         => $id,
@@ -132,5 +120,22 @@ class PostController extends Controller
             'content'    => $content,
             'created_at' => date('Y-m-d H:i:s'),
         ], 201);
+    }
+
+    private function postToArray(\App\Models\Post $p): array
+    {
+        return [
+            'id'            => $p->id,
+            'user_id'       => $p->user_id,
+            'username'      => $p->username      ?? null,
+            'song_id'       => $p->song_id,
+            'song_title'    => $p->song_title    ?? null,
+            'song_artist'   => $p->song_artist   ?? null,
+            'song_genre'    => $p->song_genre    ?? null,
+            'song_link'     => $p->song_link     ?? null,
+            'caption'       => $p->caption,
+            'comment_count' => $p->comment_count ?? 0,
+            'created_at'    => $p->created_at,
+        ];
     }
 }

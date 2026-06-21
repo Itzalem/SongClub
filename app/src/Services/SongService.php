@@ -25,6 +25,16 @@ class SongService implements ISongService
         return $this->songRepository->getSongsById($id);
     }
 
+    public function getSongsFiltered(string $artist, int $offset, int $limit): array
+    {
+        return $this->songRepository->getSongsFiltered($artist, $offset, $limit);
+    }
+
+    public function countSongs(string $artist): int
+    {
+        return $this->songRepository->countSongs($artist);
+    }
+
     public function create(array $data, int $userId): int
     {
         $song             = new Song();
