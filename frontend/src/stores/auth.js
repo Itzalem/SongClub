@@ -3,8 +3,17 @@ import { defineStore } from 'pinia'
 import api from '../utils/axios'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('token') || null)
-  const user  = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+  function readStorage(key) {
+    const val = localStorage.getItem(key)
+    return val && val !== 'undefined' && val !== 'null' ? val : null
+  }
+
+  function parseUser() {
+    try { return JSON.parse(readStorage('user')) } catch { return null }
+  }
+
+  const token = ref(readStorage('token'))
+  const user  = ref(parseUser())
 
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin    = computed(() => user.value?.role === 'admin')
