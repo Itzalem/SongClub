@@ -13,6 +13,9 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
+            <router-link class="nav-link px-3" to="/">Feed</router-link>
+          </li>
+          <li class="nav-item">
             <router-link class="nav-link px-3" to="/songs">Explore</router-link>
           </li>
           <li v-if="auth.isLoggedIn" class="nav-item">

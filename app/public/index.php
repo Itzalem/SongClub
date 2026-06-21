@@ -86,6 +86,8 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('GET',    '/api/users/{id:\d+}',       ['App\Controllers\UserController', 'showUser']);
     $r->addRoute('PUT',    '/api/users/{id:\d+}',       ['App\Controllers\UserController', 'updateProfile']);
     $r->addRoute('GET',    '/api/admin/users',          ['App\Controllers\UserController', 'listUsers']);
+    $r->addRoute('POST',   '/api/admin/users',          ['App\Controllers\UserController', 'createUser']);
+    $r->addRoute('PUT',    '/api/admin/users/{id:\d+}', ['App\Controllers\UserController', 'adminUpdateUser']);
     $r->addRoute('DELETE', '/api/admin/users/{id:\d+}', ['App\Controllers\UserController', 'removeUser']);
 
     // Legacy export

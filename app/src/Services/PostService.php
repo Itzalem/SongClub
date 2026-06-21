@@ -38,4 +38,10 @@ class PostService implements IPostService
         $post->caption = $caption;
         return $this->repo->createPost($post);
     }
+
+    public function createAndGet(int $userId, int $songId, ?string $caption): ?Post
+    {
+        $id = $this->createPost($userId, $songId, $caption);
+        return $id ? $this->repo->getPostById($id) : null;
+    }
 }

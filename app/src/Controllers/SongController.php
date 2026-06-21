@@ -142,10 +142,11 @@ class SongController extends Controller
     public function listSongs(array $vars = []): void
     {
         $artist = trim($_GET['artist'] ?? '');
+        $genre  = trim($_GET['genre']  ?? '');
         ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(9);
 
-        $songs = $this->songService->getSongsFiltered($artist, $offset, $limit);
-        $total = $this->songService->countSongs($artist);
+        $songs = $this->songService->getSongsFiltered($artist, $offset, $limit, $genre);
+        $total = $this->songService->countSongs($artist, $genre);
         $pages = (int) ceil($total / $limit) ?: 1;
 
         $this->json([

@@ -158,7 +158,94 @@ class UserController extends Controller
         ], $this->userService->getAllUsers()));
     }
 
-    // DELETE /api/admin/users/{id} 
+    // POST /api/admin/users
+    public function createUser(array $vars = []): void
+    {
+        $this->requireJwtAdmin();
+        $body     = $this->getBody();
+        $username = trim($body['username'] ?? '');
+        $email    = trim($body['email']    ?? '');
+        $password = $body['password']       ?? '';
+        $bio      = trim($body['bio']      ?? '');
+        $role     = ($body['role'] ?? '') === 'admin' ? 'admin' : 'user';
+
+        if ($username === '' || $email === '' || $password === '') {
+            $this->json(['error' => 'Username, email, and password are required.'], 400);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->json(['error' => 'Invalid email address.'], 400);
+        }
+        if (strlen($password) < 6) {
+            $this->json(['error' => 'Password must be at least 6 characters.'], 400);
+        }
+
+        $repo = new UserRepository();
+        if ($repo->getUserByUsername($username)) {
+            $this->json(['error' => 'Username already taken.'], 409);
+        }
+        if ($repo->getUserByEmail($email)) {
+            $this->json(['error' => 'Email already registered.'], 409);
+        }
+
+        $user               = new \App\Models\User();
+        $user->username     = $username;
+        $user->email        = $email;
+        $user->passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $user->bio          = $bio ?: null;
+        $user->role         = $role;
+        $userId             = $repo->createUser($user);
+        $created            = $repo->getUserById($userId);
+
+        $this->json([
+            'id'       => $created->userId,
+            'username' => $created->username,
+            'email'    => $created->email,
+            'role'     => $created->role,
+            'bio'      => $created->bio,
+        ], 201);
+    }
+
+    // PUT /api/admin/users/{id}
+    public function adminUpdateUser(array $vars = []): void
+    {
+        $this->requireJwtAdmin();
+        $targetId = (int) ($vars['id'] ?? 0);
+        $body     = $this->getBody();
+        $username = trim($body['username'] ?? '');
+        $email    = trim($body['email']    ?? '');
+        $bio      = trim($body['bio']      ?? '');
+        $role     = ($body['role'] ?? '') === 'admin' ? 'admin' : 'user';
+        $password = $body['password'] ?? '';
+
+        if ($username === '') { $this->json(['error' => 'Username is required.'], 400); }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $this->json(['error' => 'Invalid email.'], 400); }
+
+        $repo = new UserRepository();
+        $user = $repo->getUserById($targetId);
+        if (!$user) { $this->json(['error' => 'User not found.'], 404); }
+
+        if ($username !== $user->username && $repo->getUserByUsername($username)) {
+            $this->json(['error' => 'Username already taken.'], 409);
+        }
+        if ($email !== $user->email && $repo->getUserByEmail($email)) {
+            $this->json(['error' => 'Email already registered.'], 409);
+        }
+
+        $user->username = $username;
+        $user->email    = $email;
+        $user->bio      = $bio ?: null;
+        $user->role     = $role;
+        $this->userService->updateUserFull($user);
+
+        if ($password !== '') {
+            if (strlen($password) < 6) { $this->json(['error' => 'Password must be at least 6 characters.'], 400); }
+            $this->userService->changePassword($targetId, $password);
+        }
+
+        $this->json(['id' => $targetId, 'username' => $username, 'email' => $email, 'bio' => $bio ?: null, 'role' => $role]);
+    }
+
+    // DELETE /api/admin/users/{id}
     public function removeUser(array $vars = []): void
     {
         $tokenData = $this->requireJwtAdmin();

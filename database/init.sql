@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS songs (
 
 CREATE TABLE IF NOT EXISTS posts (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT NOT NULL UNIQUE,
+    user_id    INT NOT NULL,
     song_id    INT NOT NULL,
     caption    TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

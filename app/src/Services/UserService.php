@@ -75,6 +75,11 @@ class UserService implements IUserService
         return $this->userRepository->updateUser($user);
     }
 
+    public function updateUserFull(User $user): void
+    {
+        $this->userRepository->updateUserFull($user);
+    }
+
     public function updateProfile(User $user, string $username, string $email, string $bio): void
     {
         if (empty($username)) {

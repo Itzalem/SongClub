@@ -142,6 +142,20 @@ class UserRepository extends Repository implements IUserRepository
         $statement->execute();
     }
 
+    public function updateUserFull(User $user): void
+    {
+        $sql = "UPDATE users SET username = :username, bio = :bio, email = :email, role = :role WHERE id = :id";
+
+        $connection = $this->getConnection();
+        $statement  = $connection->prepare($sql);
+        $statement->bindParam(':username', $user->username);
+        $statement->bindParam(':bio',      $user->bio);
+        $statement->bindParam(':email',    $user->email);
+        $statement->bindParam(':role',     $user->role);
+        $statement->bindParam(':id',       $user->userId, PDO::PARAM_INT);
+        $statement->execute();
+    }
+
     public function deleteUser(int $id): void
     {
         $sql        = "DELETE FROM users WHERE id = :id";
