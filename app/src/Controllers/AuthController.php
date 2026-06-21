@@ -4,10 +4,10 @@ namespace App\Controllers;
 
 use App\Config;
 use App\Framework\Controller;
+use App\Framework\JwtHelper;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
-use App\Framework\JwtHelper;
 
 class AuthController extends Controller
 {
@@ -21,7 +21,7 @@ class AuthController extends Controller
     // POST /api/auth/login
     public function login(array $vars = []): void
     {
-        $body     = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body     = $this->getBody();
         $email    = trim($body['email']    ?? '');
         $password = $body['password'] ?? '';
 
@@ -35,10 +35,8 @@ class AuthController extends Controller
             $this->json(['error' => 'Invalid credentials.'], 401);
         }
 
-        $token = $this->generateToken($user);
-
         $this->json([
-            'token' => $token,
+            'token' => $this->generateToken($user),
             'user'  => $this->userToArray($user),
         ]);
     }
@@ -46,28 +44,28 @@ class AuthController extends Controller
     // POST /api/auth/register
     public function register(array $vars = []): void
     {
-        $body     = json_decode(file_get_contents('php://input'), true) ?? [];
-        $username = trim($body['username'] ?? '');
-        $email    = trim($body['email']    ?? '');
-        $password = $body['password'] ?? '';
-        $bio      = trim($body['bio']      ?? '');
+        $body = $this->getBody();
 
         try {
-            $userId = $this->userService->register($username, $email, $password, $bio);
+            $userId = $this->userService->register(
+                trim($body['username'] ?? ''),
+                trim($body['email']    ?? ''),
+                $body['password'] ?? '',
+                trim($body['bio']      ?? '')
+            );
         } catch (\InvalidArgumentException $e) {
             $this->json(['error' => $e->getMessage()], 400);
         }
 
-        $user  = $this->userService->getUserById($userId);
-        $token = $this->generateToken($user);
+        $user = $this->userService->getUserById($userId);
 
         $this->json([
-            'token' => $token,
+            'token' => $this->generateToken($user),
             'user'  => $this->userToArray($user),
         ], 201);
     }
 
-    // GET /api/auth/me  — requires JWT
+    // GET /api/auth/me (JWT required)
     public function me(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
@@ -80,13 +78,11 @@ class AuthController extends Controller
         $this->json($this->userToArray($user));
     }
 
-    // --- private helpers ---
-
     private function generateToken(User $user): string
     {
         $now = time();
 
-        $payload = [
+        return JwtHelper::encode([
             'iat'  => $now,
             'exp'  => $now + Config::JWT_EXPIRES_IN,
             'data' => [
@@ -94,9 +90,7 @@ class AuthController extends Controller
                 'username' => $user->username,
                 'role'     => $user->role,
             ],
-        ];
-
-        return JwtHelper::encode($payload);
+        ]);
     }
 
     private function userToArray(User $user): array

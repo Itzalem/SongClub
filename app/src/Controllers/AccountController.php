@@ -8,7 +8,14 @@ use App\Repositories\UserRepository;
 
 class AccountController extends Controller
 {
-    // GET / — landing page; redirect to home if already logged in
+    private UserService $userService;
+
+    public function __construct()
+    {
+        $this->userService = new UserService(new UserRepository());
+    }
+
+    // GET /
     public function landing(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -19,6 +26,7 @@ class AccountController extends Controller
         $this->render('Landing', []);
     }
 
+    // GET|POST /login
     public function login(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -29,14 +37,13 @@ class AccountController extends Controller
         $error = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email    = $_POST['email'] ?? '';
+            $email    = $_POST['email']    ?? '';
             $password = $_POST['password'] ?? '';
 
             if (empty($email) || empty($password)) {
                 $error = 'All fields are required.';
             } else {
-                $userService = new UserService(new UserRepository());
-                $user        = $userService->login($email, $password);
+                $user = $this->userService->login($email, $password);
 
                 if ($user) {
                     $_SESSION['user_id']  = $user->userId;
@@ -44,15 +51,16 @@ class AccountController extends Controller
                     $_SESSION['role']     = $user->role;
                     header('Location: /profile/' . (int) $user->userId);
                     exit;
-                } else {
-                    $error = 'Invalid email or password.';
                 }
+
+                $error = 'Invalid email or password.';
             }
         }
 
         $this->render('Login', ['error' => $error]);
     }
 
+    // GET|POST /register
     public function register(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -64,8 +72,7 @@ class AccountController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $userService = new UserService(new UserRepository());
-                $userId      = $userService->register(
+                $userId = $this->userService->register(
                     $_POST['username'] ?? '',
                     $_POST['email']    ?? '',
                     $_POST['password'] ?? '',
@@ -84,6 +91,7 @@ class AccountController extends Controller
         $this->render('Register', ['error' => $error]);
     }
 
+    // POST /logout
     public function logout(array $vars = []): void
     {
         unset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['role']);

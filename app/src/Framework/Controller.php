@@ -4,10 +4,6 @@ namespace App\Framework;
 
 abstract class Controller
 {
-    /**
-     * * @param string $view 
-     * @param array $data 
-     */
     protected function render(string $view, array $data = []): void
     {
         extract($data);
@@ -29,6 +25,15 @@ abstract class Controller
             header('Location: /');
             exit;
         }
+    }
+
+    protected function requireJwtAdmin(): object
+    {
+        $tokenData = $this->validateJWT();
+        if ($tokenData->role !== 'admin') {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
+        return $tokenData;
     }
 
     protected function json(mixed $data, int $status = 200): void

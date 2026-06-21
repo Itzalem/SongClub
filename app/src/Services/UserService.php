@@ -75,6 +75,20 @@ class UserService implements IUserService
         return $this->userRepository->updateUser($user);
     }
 
+    public function updateProfile(User $user, string $username, string $email, string $bio): void
+    {
+        if ($username !== $user->username && $this->userRepository->getUserByUsername($username) !== null) {
+            throw new \InvalidArgumentException('That username is already taken.');
+        }
+        if ($email !== $user->email && $this->userRepository->getUserByEmail($email) !== null) {
+            throw new \InvalidArgumentException('That email is already registered.');
+        }
+        $user->username = $username;
+        $user->email    = $email;
+        $user->bio      = $bio ?: null;
+        $this->userRepository->updateUser($user);
+    }
+
     public function changePassword(int $userId, string $newPassword): void
     {
         $hash = password_hash($newPassword, PASSWORD_BCRYPT);

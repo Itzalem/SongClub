@@ -11,4 +11,8 @@ interface IFavoriteService
     public function getFavoriteIds(int $userId): array;
     public function getLikeIds(int $userId): array;
     public function getLikeCount(int $songId): int;
+    public function getFavoritesFiltered(int $userId, string $artist, int $offset, int $limit): array;
+    public function countFavorites(int $userId, string $artist): int;
+    public function getLikedFiltered(int $userId, string $artist, int $offset, int $limit): array;
+    public function countLiked(int $userId, string $artist): int;
 }

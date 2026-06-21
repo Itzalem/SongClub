@@ -3,25 +3,32 @@
 namespace App\Controllers;
 
 use App\Framework\Controller;
+use App\Services\CommentService;
 use App\Repositories\CommentRepository;
 
 class CommentController extends Controller
 {
-    // POST /comments/store — AJAX: add a comment to a last-listened post
+    private CommentService $commentService;
+
+    public function __construct()
+    {
+        $this->commentService = new CommentService(new CommentRepository());
+    }
+
+    // POST /comments/store — AJAX: add a comment (session-based)
     public function store(array $vars = []): void
     {
         $this->requireAuth();
 
-        $body    = json_decode(file_get_contents('php://input'), true);
+        $body    = $this->getBody();
         $postId  = (int) ($body['post_id'] ?? 0);
         $content = trim($body['content'] ?? '');
 
-        if ($postId === 0 || $content === '') {
-            $this->json(['error' => 'Invalid input'], 422);
+        if (!$postId || $content === '') {
+            $this->json(['error' => 'Invalid input.'], 422);
         }
 
-        $repo      = new CommentRepository();
-        $commentId = $repo->createComment($postId, (int) $_SESSION['user_id'], $content);
+        $commentId = $this->commentService->addComment($postId, (int) $_SESSION['user_id'], $content);
 
         $this->json([
             'id'         => $commentId,

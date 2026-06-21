@@ -19,6 +19,7 @@ class PostController extends Controller
         $this->commentService = new CommentService(new CommentRepository());
     }
 
+    // POST /last-listened/set (web, session-based)
     public function set(array $vars = []): void
     {
         $this->requireAuth();
@@ -35,7 +36,7 @@ class PostController extends Controller
     }
 
     // GET /api/feed?page=&limit=
-    public function apiFeed(array $vars = []): void
+    public function feed(array $vars = []): void
     {
         ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(10);
 
@@ -50,7 +51,7 @@ class PostController extends Controller
     }
 
     // POST /api/posts (JWT required)
-    public function apiSet(array $vars = []): void
+    public function store(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $body      = $this->getBody();
@@ -74,15 +75,13 @@ class PostController extends Controller
     }
 
     // GET /api/posts/{id}/comments
-    public function apiGetComments(array $vars = []): void
+    public function comments(array $vars = []): void
     {
         $postId = (int) ($vars['id'] ?? 0);
 
         if (!$postId) {
             $this->json(['error' => 'Invalid post ID.'], 400);
         }
-
-        $comments = $this->commentService->getByPost($postId);
 
         $this->json(array_map(fn($c) => [
             'id'         => $c->id,
@@ -91,11 +90,11 @@ class PostController extends Controller
             'username'   => $c->username ?? '',
             'content'    => $c->content,
             'created_at' => $c->created_at,
-        ], $comments));
+        ], $this->commentService->getByPost($postId)));
     }
 
     // POST /api/posts/{id}/comments (JWT required)
-    public function apiAddComment(array $vars = []): void
+    public function storeComment(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $postId    = (int) ($vars['id'] ?? 0);

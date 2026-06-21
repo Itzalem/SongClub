@@ -7,6 +7,7 @@ use App\Services\UserService;
 use App\Services\FavoriteService;
 use App\Services\PostService;
 use App\Services\SongService;
+use App\Services\CommentService;
 use App\Repositories\UserRepository;
 use App\Repositories\InteractionRepository;
 use App\Repositories\PostRepository;
@@ -16,15 +17,28 @@ use App\ViewModels\ProfileVm;
 
 class ProfileController extends Controller
 {
-    // GET /profile/{id} — home / feed view
+    private UserService     $userService;
+    private PostService     $postService;
+    private CommentService  $commentService;
+    private FavoriteService $favoriteService;
+    private SongService     $songService;
+
+    public function __construct()
+    {
+        $this->userService     = new UserService(new UserRepository());
+        $this->postService     = new PostService(new PostRepository());
+        $this->commentService  = new CommentService(new CommentRepository());
+        $this->favoriteService = new FavoriteService(new InteractionRepository());
+        $this->songService     = new SongService(new SongRepository());
+    }
+
+    // GET /profile/{id}
     public function show(array $vars = []): void
     {
         $this->requireAuth();
 
         $profileUserId = (int) ($vars['id'] ?? 0);
-
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById($profileUserId);
+        $user          = $this->userService->getUserById($profileUserId);
 
         if (!$user) {
             http_response_code(404);
@@ -37,41 +51,29 @@ class ProfileController extends Controller
         $vm          = new ProfileVm();
         $vm->user    = $user;
         $vm->isOwner = ($currentUserId > 0 && $currentUserId === $profileUserId);
+        $vm->posts   = $this->postService->getAllByUser($profileUserId);
 
-        // En ProfileController.php, dentro de show()
-$postService = new PostService(new PostRepository());
-$commentRepo = new CommentRepository();
+        foreach ($vm->posts as $post) {
+            $post->comments = $this->commentService->getByPost($post->id);
+        }
 
-// Obtener todos los posts
-$vm->posts = $postService->getAllByUser($profileUserId);
+        $vm->favorites = $this->favoriteService->getFavoritesByUser($profileUserId);
 
-// Para cada post, adjuntamos sus comentarios (puedes añadir una propiedad temporal al modelo Post)
-foreach ($vm->posts as $post) {
-    $post->comments = $commentRepo->getCommentsByPost($post->id);
-}
-
-        // Favorites (visible to everyone)
-        $favService    = new FavoriteService(new InteractionRepository());
-        $vm->favorites = $favService->getFavoritesByUser($profileUserId);
-
-        // Liked songs & songs dropdown (owner only)
         if ($vm->isOwner) {
-            $vm->likes = $favService->getLikesByUser($profileUserId);
-            $vm->songs = (new SongService(new SongRepository()))->getAll();
+            $vm->likes = $this->favoriteService->getLikesByUser($profileUserId);
+            $vm->songs = $this->songService->getAll();
         }
 
         $this->render('UserProfile', ['vm' => $vm]);
     }
 
-    // GET /user/{id} — read-only profile page (accessible via nav username link)
+    // GET /user/{id}
     public function userView(array $vars = []): void
     {
         $this->requireAuth();
 
         $profileUserId = (int) ($vars['id'] ?? 0);
-
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById($profileUserId);
+        $user          = $this->userService->getUserById($profileUserId);
 
         if (!$user) {
             http_response_code(404);
@@ -79,126 +81,102 @@ foreach ($vm->posts as $post) {
             return;
         }
 
-        $isOwner = ((int) ($_SESSION['user_id'] ?? 0) === $profileUserId);
-
         $this->render('User/View', [
             'user'     => $user,
-            'isOwner'  => $isOwner,
+            'isOwner'  => ((int) ($_SESSION['user_id'] ?? 0) === $profileUserId),
             'editMode' => false,
             'error'    => null,
             'success'  => null,
         ]);
     }
 
-    // GET /profile/edit — edit profile form
+    // GET /profile/edit
     public function editForm(array $vars = []): void
     {
         $this->requireAuth();
 
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById((int) $_SESSION['user_id']);
+        $user = $this->userService->getUserById((int) $_SESSION['user_id']);
 
         if (!$user) {
             header('Location: /');
             exit;
         }
+
+        $error   = $_SESSION['edit_error']   ?? null;
+        $success = $_SESSION['edit_success'] ?? null;
+        unset($_SESSION['edit_error'], $_SESSION['edit_success']);
 
         $this->render('User/View', [
             'user'     => $user,
             'isOwner'  => true,
             'editMode' => true,
-            'error'    => $_SESSION['edit_error']   ?? null,
-            'success'  => $_SESSION['edit_success'] ?? null,
+            'error'    => $error,
+            'success'  => $success,
         ]);
-
-        unset($_SESSION['edit_error'], $_SESSION['edit_success']);
     }
 
-    // POST /profile/edit — save profile changes
+    // POST /profile/edit
     public function editSave(array $vars = []): void
     {
         $this->requireAuth();
 
-        $userId      = (int) $_SESSION['user_id'];
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById($userId);
+        $userId = (int) $_SESSION['user_id'];
+        $user   = $this->userService->getUserById($userId);
 
         if (!$user) {
             header('Location: /');
             exit;
         }
 
-        $username        = trim($_POST['username']         ?? '');
-        $email           = trim($_POST['email']            ?? '');
-        $bio             = trim($_POST['bio']              ?? '');
-        $currentPassword = $_POST['current_password']     ?? '';
-        $newPassword     = $_POST['new_password']         ?? '';
-        $confirmPassword = $_POST['confirm_password']     ?? '';
+        $username = trim($_POST['username'] ?? '');
+        $email    = trim($_POST['email']    ?? '');
+        $bio      = trim($_POST['bio']      ?? '');
 
-        // Validate basics
         if ($username === '') {
             $_SESSION['edit_error'] = 'Username cannot be empty.';
             header('Location: /profile/edit');
             exit;
         }
+
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION['edit_error'] = 'Please enter a valid email address.';
             header('Location: /profile/edit');
             exit;
         }
 
-        // Check username uniqueness (if changed)
-        if ($username !== $user->username) {
-            $existing = (new UserRepository())->getUserByUsername($username);
-            if ($existing !== null) {
-                $_SESSION['edit_error'] = 'That username is already taken.';
-                header('Location: /profile/edit');
-                exit;
-            }
+        try {
+            $this->userService->updateProfile($user, $username, $email, $bio);
+            $_SESSION['username'] = $username;
+        } catch (\InvalidArgumentException $e) {
+            $_SESSION['edit_error'] = $e->getMessage();
+            header('Location: /profile/edit');
+            exit;
         }
 
-        // Check email uniqueness (if changed)
-        if ($email !== $user->email) {
-            $existing = (new UserRepository())->getUserByEmail($email);
-            if ($existing !== null) {
-                $_SESSION['edit_error'] = 'That email is already registered.';
-                header('Location: /profile/edit');
-                exit;
-            }
-        }
+        $newPassword = $_POST['new_password'] ?? '';
 
-        // Update username, email, bio
-        $user->username = $username;
-        $user->email    = $email;
-        $user->bio      = $bio ?: null;
-        $userService->updateUser($user);
-        $_SESSION['username'] = $username;
-
-        // Optionally change password
         if ($newPassword !== '') {
-            if (!password_verify($currentPassword, $user->passwordHash)) {
-                $_SESSION['edit_error'] = 'Current password is incorrect.';
+            $error = $this->validatePasswordChange(
+                $user->passwordHash,
+                $_POST['current_password'] ?? '',
+                $newPassword,
+                $_POST['confirm_password'] ?? ''
+            );
+
+            if ($error) {
+                $_SESSION['edit_error'] = $error;
                 header('Location: /profile/edit');
                 exit;
             }
-            if (strlen($newPassword) < 6) {
-                $_SESSION['edit_error'] = 'New password must be at least 6 characters.';
-                header('Location: /profile/edit');
-                exit;
-            }
-            if ($newPassword !== $confirmPassword) {
-                $_SESSION['edit_error'] = 'New passwords do not match.';
-                header('Location: /profile/edit');
-                exit;
-            }
-            $userService->changePassword($userId, $newPassword);
+
+            $this->userService->changePassword($userId, $newPassword);
         }
 
         header('Location: /user/' . $userId);
         exit;
     }
 
-    // POST /profile/update — legacy endpoint kept for compatibility
+    // POST /profile/update — legacy web endpoint
     public function update(array $vars = []): void
     {
         $this->requireAuth();
@@ -211,17 +189,30 @@ foreach ($vm->posts as $post) {
             exit;
         }
 
-        $userService = new UserService(new UserRepository());
-        $user        = $userService->getUserById((int) $_SESSION['user_id']);
+        $user = $this->userService->getUserById((int) $_SESSION['user_id']);
 
         if ($user) {
             $user->username       = $username;
             $user->bio            = $bio ?: null;
-            $userService->updateUser($user);
+            $this->userService->updateUser($user);
             $_SESSION['username'] = $username;
         }
 
         header('Location: /profile/' . (int) $_SESSION['user_id']);
         exit;
+    }
+
+    private function validatePasswordChange(string $hash, string $current, string $new, string $confirm): ?string
+    {
+        if (!password_verify($current, $hash)) {
+            return 'Current password is incorrect.';
+        }
+        if (strlen($new) < 6) {
+            return 'New password must be at least 6 characters.';
+        }
+        if ($new !== $confirm) {
+            return 'New passwords do not match.';
+        }
+        return null;
     }
 }

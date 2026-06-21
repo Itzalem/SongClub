@@ -37,7 +37,7 @@ class UserController extends Controller
         exit;
     }
 
-    // POST /profile/update
+    // POST /profile/update (legacy web endpoint)
     public function update(array $vars = []): void
     {
         $this->requireAuth();
@@ -64,12 +64,14 @@ class UserController extends Controller
     }
 
     // GET /api/users/{id}
-    public function apiShow(array $vars = []): void
+    public function show(array $vars = []): void
     {
         $user = $this->userService->getUserById((int) $vars['id']);
+
         if (!$user) {
             $this->json(['error' => 'User not found.'], 404);
         }
+
         $this->json([
             'id'       => $user->userId,
             'username' => $user->username,
@@ -78,53 +80,46 @@ class UserController extends Controller
         ]);
     }
 
-    // GET /api/admin/users (JWT + admin required)
-    public function apiAdminList(array $vars = []): void
-    {
-        $tokenData = $this->validateJWT();
-        if ($tokenData->role !== 'admin') {
-            $this->json(['error' => 'Forbidden.'], 403);
-        }
-
-        $users = $this->userService->getAllUsers();
-        $this->json(array_map(fn($u) => [
-            'id'       => $u->userId,
-            'username' => $u->username,
-            'email'    => $u->email,
-            'role'     => $u->role,
-            'bio'      => $u->bio,
-        ], $users));
-    }
-
-    // DELETE /api/admin/users/{id} (JWT + admin required)
-    public function apiAdminDelete(array $vars = []): void
-    {
-        $tokenData = $this->validateJWT();
-        if ($tokenData->role !== 'admin') {
-            $this->json(['error' => 'Forbidden.'], 403);
-        }
-
-        $targetId = (int) ($vars['id'] ?? 0);
-        if ($targetId === (int) $tokenData->id) {
-            $this->json(['error' => 'Cannot delete yourself.'], 400);
-        }
-
-        $this->userService->deleteUser($targetId);
-        $this->json(['deleted' => true]);
-    }
-
     // GET /api/users/search?q=
     public function search(array $vars = []): void
     {
         $this->requireAuth();
 
-        $query = trim($_GET['q'] ?? '');
-        $users = $this->userService->search($query);
+        $users = $this->userService->search(trim($_GET['q'] ?? ''));
 
         $this->json(array_map(fn($u) => [
             'id'       => $u->userId,
             'username' => htmlspecialchars($u->username, ENT_QUOTES, 'UTF-8'),
             'bio'      => htmlspecialchars($u->bio ?? '', ENT_QUOTES, 'UTF-8'),
         ], $users));
+    }
+
+    // GET /api/admin/users (JWT + admin required)
+    public function adminList(array $vars = []): void
+    {
+        $this->requireJwtAdmin();
+
+        $this->json(array_map(fn($u) => [
+            'id'       => $u->userId,
+            'username' => $u->username,
+            'email'    => $u->email,
+            'role'     => $u->role,
+            'bio'      => $u->bio,
+        ], $this->userService->getAllUsers()));
+    }
+
+    // DELETE /api/admin/users/{id} (JWT + admin required)
+    public function adminDelete(array $vars = []): void
+    {
+        $tokenData = $this->requireJwtAdmin();
+
+        $targetId = (int) ($vars['id'] ?? 0);
+
+        if ($targetId === (int) $tokenData->id) {
+            $this->json(['error' => 'Cannot delete yourself.'], 400);
+        }
+
+        $this->userService->deleteUser($targetId);
+        $this->json(['deleted' => true]);
     }
 }

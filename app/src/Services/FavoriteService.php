@@ -49,4 +49,24 @@ class FavoriteService implements IFavoriteService
     {
         return $this->repo->countBySong($songId, ESongType::LIKED);
     }
+
+    public function getFavoritesFiltered(int $userId, string $artist, int $offset, int $limit): array
+    {
+        return $this->repo->getSongsByUserFiltered($userId, ESongType::FAVORITE, $artist, $offset, $limit);
+    }
+
+    public function countFavorites(int $userId, string $artist): int
+    {
+        return $this->repo->countByUser($userId, ESongType::FAVORITE, $artist);
+    }
+
+    public function getLikedFiltered(int $userId, string $artist, int $offset, int $limit): array
+    {
+        return $this->repo->getSongsByUserFiltered($userId, ESongType::LIKED, $artist, $offset, $limit);
+    }
+
+    public function countLiked(int $userId, string $artist): int
+    {
+        return $this->repo->countByUser($userId, ESongType::LIKED, $artist);
+    }
 }

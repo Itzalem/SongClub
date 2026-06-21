@@ -22,7 +22,7 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     // Landing page
     $r->addRoute('GET', '/', ['App\Controllers\AccountController', 'landing']);
 
-    // Auth (PHP session-based — kept for existing PHP views)
+    // Auth
     $r->addRoute(['GET', 'POST'], '/login',    ['App\Controllers\AccountController', 'login']);
     $r->addRoute(['GET', 'POST'], '/register', ['App\Controllers\AccountController', 'register']);
     $r->addRoute('POST',          '/logout',   ['App\Controllers\AccountController', 'logout']);
@@ -48,7 +48,6 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     // Last listened post
     $r->addRoute('POST', '/last-listened/set', ['App\Controllers\PostController', 'set']);
 
-    // AJAX interactions (PHP view layer)
     $r->addRoute('POST', '/favorites/toggle', ['App\Controllers\FavoriteController', 'toggle']);
     $r->addRoute('POST', '/likes/toggle',     ['App\Controllers\FavoriteController', 'toggleLike']);
     $r->addRoute('POST', '/comments/store',   ['App\Controllers\CommentController', 'store']);
@@ -57,40 +56,36 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('GET',  '/admin/users',                 ['App\Controllers\UserController', 'index']);
     $r->addRoute('POST', '/admin/users/{id:\d+}/delete', ['App\Controllers\UserController', 'delete']);
 
-    // ── REST API ────────────────────────────────────────────────────────────
-
-    // Auth (JWT-based — for Vue frontend)
+    // Auth
     $r->addRoute('POST', '/api/auth/login',    ['App\Controllers\AuthController', 'login']);
     $r->addRoute('POST', '/api/auth/register', ['App\Controllers\AuthController', 'register']);
     $r->addRoute('GET',  '/api/auth/me',       ['App\Controllers\AuthController', 'me']);
 
-    // Songs REST API
-    $r->addRoute('GET',    '/api/songs',          ['App\Controllers\SongController', 'apiList']);
-    $r->addRoute('POST',   '/api/songs',          ['App\Controllers\SongController', 'apiCreate']);
-    $r->addRoute('GET',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiShow']);
-    $r->addRoute('PUT',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiUpdate']);
-    $r->addRoute('DELETE', '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'apiDelete']);
+    // Songs API
+    $r->addRoute('GET',    '/api/songs',          ['App\Controllers\SongController', 'all']);
+    $r->addRoute('POST',   '/api/songs',          ['App\Controllers\SongController', 'store']);
+    $r->addRoute('GET',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'find']);
+    $r->addRoute('PUT',    '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'update']);
+    $r->addRoute('DELETE', '/api/songs/{id:\d+}', ['App\Controllers\SongController', 'destroy']);
 
-    // Social feed
-    $r->addRoute('GET',  '/api/feed',                       ['App\Controllers\PostController', 'apiFeed']);
-    $r->addRoute('POST', '/api/posts',                      ['App\Controllers\PostController', 'apiSet']);
-    $r->addRoute('GET',  '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'apiGetComments']);
-    $r->addRoute('POST', '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'apiAddComment']);
+    // Feed
+    $r->addRoute('GET',  '/api/feed',                       ['App\Controllers\PostController', 'feed']);
+    $r->addRoute('POST', '/api/posts',                      ['App\Controllers\PostController', 'store']);
+    $r->addRoute('GET',  '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'comments']);
+    $r->addRoute('POST', '/api/posts/{id:\d+}/comments',    ['App\Controllers\PostController', 'storeComment']);
 
     // User favorites & likes
-    $r->addRoute('GET',  '/api/users/{id:\d+}/favorites', ['App\Controllers\FavoriteController', 'apiFavorites']);
-    $r->addRoute('GET',  '/api/users/{id:\d+}/liked',     ['App\Controllers\FavoriteController', 'apiLiked']);
-    $r->addRoute('POST', '/api/songs/{id:\d+}/favorite',  ['App\Controllers\FavoriteController', 'apiToggleFavorite']);
-    $r->addRoute('POST', '/api/songs/{id:\d+}/like',      ['App\Controllers\FavoriteController', 'apiToggleLike']);
+    $r->addRoute('GET',  '/api/users/{id:\d+}/favorites', ['App\Controllers\FavoriteController', 'favorites']);
+    $r->addRoute('GET',  '/api/users/{id:\d+}/liked',     ['App\Controllers\FavoriteController', 'liked']);
+    $r->addRoute('POST', '/api/songs/{id:\d+}/favorite',  ['App\Controllers\FavoriteController', 'favorite']);
+    $r->addRoute('POST', '/api/songs/{id:\d+}/like',      ['App\Controllers\FavoriteController', 'like']);
 
     // User profile & admin
     $r->addRoute('GET',    '/api/users/search',          ['App\Controllers\UserController', 'search']);
-    $r->addRoute('GET',    '/api/users/{id:\d+}',        ['App\Controllers\UserController', 'apiShow']);
-    $r->addRoute('PUT',    '/api/users/{id:\d+}',        ['App\Controllers\UserController', 'apiUpdateProfile']);
-    $r->addRoute('GET',    '/api/admin/users',           ['App\Controllers\UserController', 'apiAdminList']);
-    $r->addRoute('DELETE', '/api/admin/users/{id:\d+}',  ['App\Controllers\UserController', 'apiAdminDelete']);
+    $r->addRoute('GET',    '/api/users/{id:\d+}',        ['App\Controllers\UserController', 'show']);
+    $r->addRoute('GET',    '/api/admin/users',           ['App\Controllers\UserController', 'adminList']);
+    $r->addRoute('DELETE', '/api/admin/users/{id:\d+}',  ['App\Controllers\UserController', 'adminDelete']);
 
-    // Legacy export
     $r->addRoute('GET', '/api/favorites/{userId:\d+}',   ['App\Controllers\FavoriteController', 'export']);
 });
 

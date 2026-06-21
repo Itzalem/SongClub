@@ -10,7 +10,7 @@ use App\Repositories\InteractionRepository;
 
 class SongController extends Controller
 {
-    private SongService $songService;
+    private SongService     $songService;
     private FavoriteService $favoriteService;
 
     public function __construct()
@@ -19,6 +19,7 @@ class SongController extends Controller
         $this->favoriteService = new FavoriteService(new InteractionRepository());
     }
 
+    // GET /songs
     public function index(array $vars = []): void
     {
         $songs    = $this->songService->getAll();
@@ -37,6 +38,7 @@ class SongController extends Controller
         ]);
     }
 
+    // GET /songs/{id}
     public function show(array $vars = []): void
     {
         $song = $this->songService->getById((int) $vars['id']);
@@ -52,8 +54,9 @@ class SongController extends Controller
         $isFav     = false;
 
         if (isset($_SESSION['user_id'])) {
-            $isLiked = in_array($song->id, $this->favoriteService->getLikeIds((int) $_SESSION['user_id']));
-            $isFav   = in_array($song->id, $this->favoriteService->getFavoriteIds((int) $_SESSION['user_id']));
+            $uid     = (int) $_SESSION['user_id'];
+            $isLiked = in_array($song->id, $this->favoriteService->getLikeIds($uid));
+            $isFav   = in_array($song->id, $this->favoriteService->getFavoriteIds($uid));
         }
 
         $this->render('Songs/Show', [
@@ -64,6 +67,7 @@ class SongController extends Controller
         ]);
     }
 
+    // GET|POST /songs/create
     public function create(array $vars = []): void
     {
         $this->requireAuth();
@@ -85,6 +89,7 @@ class SongController extends Controller
         $this->render('Songs/CreateSong', ['error' => $error]);
     }
 
+    // GET|POST /songs/{id}/edit
     public function edit(array $vars = []): void
     {
         $this->requireAuth();
@@ -119,6 +124,7 @@ class SongController extends Controller
         $this->render('Songs/EditSong', ['song' => $song, 'error' => $error]);
     }
 
+    // POST /songs/{id}/delete
     public function delete(array $vars = []): void
     {
         $this->requireAuth();
@@ -133,7 +139,7 @@ class SongController extends Controller
     }
 
     // GET /api/songs?artist=&page=&limit=
-    public function apiList(array $vars = []): void
+    public function all(array $vars = []): void
     {
         $artist = trim($_GET['artist'] ?? '');
         ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(9);
@@ -149,9 +155,10 @@ class SongController extends Controller
     }
 
     // GET /api/songs/{id}
-    public function apiShow(array $vars = []): void
+    public function find(array $vars = []): void
     {
         $song = $this->songService->getById((int) $vars['id']);
+
         if (!$song) {
             $this->json(['error' => 'Song not found.'], 404);
         }
@@ -163,7 +170,7 @@ class SongController extends Controller
     }
 
     // POST /api/songs (JWT required)
-    public function apiCreate(array $vars = []): void
+    public function store(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $body      = $this->getBody();
@@ -181,7 +188,7 @@ class SongController extends Controller
     }
 
     // PUT /api/songs/{id} (JWT required)
-    public function apiUpdate(array $vars = []): void
+    public function update(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $song      = $this->songService->getById((int) $vars['id']);
@@ -201,7 +208,7 @@ class SongController extends Controller
     }
 
     // DELETE /api/songs/{id} (JWT required)
-    public function apiDelete(array $vars = []): void
+    public function destroy(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $song      = $this->songService->getById((int) $vars['id']);
