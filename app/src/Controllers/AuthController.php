@@ -65,7 +65,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // GET /api/auth/me (JWT required)
+    // GET /api/auth/me 
     public function me(array $vars = []): void
     {
         $tokenData = $this->validateJWT();

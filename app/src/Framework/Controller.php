@@ -4,6 +4,10 @@ namespace App\Framework;
 
 abstract class Controller
 {
+    /**
+     * * @param string $view 
+     * @param array $data 
+     */
     protected function render(string $view, array $data = []): void
     {
         extract($data);
@@ -27,6 +31,14 @@ abstract class Controller
         }
     }
 
+    protected function json(mixed $data, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+
     protected function requireJwtAdmin(): object
     {
         $tokenData = $this->validateJWT();
@@ -34,14 +46,6 @@ abstract class Controller
             $this->json(['error' => 'Forbidden.'], 403);
         }
         return $tokenData;
-    }
-
-    protected function json(mixed $data, int $status = 200): void
-    {
-        http_response_code($status);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
     }
 
     protected function validateJWT(): object
@@ -73,5 +77,18 @@ abstract class Controller
         $page   = max(1, (int) ($_GET['page']  ?? 1));
         $offset = ($page - 1) * $limit;
         return ['page' => $page, 'limit' => $limit, 'offset' => $offset];
+    }
+
+    protected function jsonPaged(array $data, int $page, int $limit, int $total): void
+    {
+        $this->json([
+            'data' => $data,
+            'meta' => [
+                'page'        => $page,
+                'limit'       => $limit,
+                'total'       => $total,
+                'total_pages' => (int) ceil($total / $limit) ?: 1,
+            ],
+        ]);
     }
 }

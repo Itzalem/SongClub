@@ -15,7 +15,7 @@ class CommentController extends Controller
         $this->commentService = new CommentService(new CommentRepository());
     }
 
-    // POST /comments/store — AJAX: add a comment (session-based)
+    // POST /comments/store 
     public function store(array $vars = []): void
     {
         $this->requireAuth();

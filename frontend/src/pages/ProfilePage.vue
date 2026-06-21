@@ -116,10 +116,10 @@ const postCaption = ref('')
 async function load() {
   const [userRes, feedRes] = await Promise.all([
     api.get(`/api/users/${userId.value}`),
-    api.get(`/api/feed?page=1&limit=50`),
+    api.get(`/api/feed?user_id=${userId.value}&limit=50`),
   ])
   profileUser.value = userRes.data
-  posts.value = feedRes.data.data.filter(p => p.user_id === userId.value)
+  posts.value       = feedRes.data.data
 
   if (isOwner.value) {
     const songsRes = await api.get('/api/songs?limit=200')

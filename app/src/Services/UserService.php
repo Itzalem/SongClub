@@ -77,6 +77,12 @@ class UserService implements IUserService
 
     public function updateProfile(User $user, string $username, string $email, string $bio): void
     {
+        if (empty($username)) {
+            throw new \InvalidArgumentException('Username cannot be empty.');
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('Please enter a valid email address.');
+        }
         if ($username !== $user->username && $this->userRepository->getUserByUsername($username) !== null) {
             throw new \InvalidArgumentException('That username is already taken.');
         }

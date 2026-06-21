@@ -138,8 +138,8 @@ class SongController extends Controller
         exit;
     }
 
-    // GET /api/songs?artist=&page=&limit=
-    public function all(array $vars = []): void
+    // GET /api/songs...with pagination and filter
+    public function listSongs(array $vars = []): void
     {
         $artist = trim($_GET['artist'] ?? '');
         ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(9);
@@ -155,7 +155,7 @@ class SongController extends Controller
     }
 
     // GET /api/songs/{id}
-    public function find(array $vars = []): void
+    public function showSong(array $vars = []): void
     {
         $song = $this->songService->getById((int) $vars['id']);
 
@@ -169,8 +169,8 @@ class SongController extends Controller
         $this->json($data);
     }
 
-    // POST /api/songs (JWT required)
-    public function store(array $vars = []): void
+    // POST /api/songs
+    public function createSong(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $body      = $this->getBody();
@@ -187,8 +187,8 @@ class SongController extends Controller
         $this->json($this->songToArray($song), 201);
     }
 
-    // PUT /api/songs/{id} (JWT required)
-    public function update(array $vars = []): void
+    // PUT /api/songs/{id}
+    public function updateSong(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $song      = $this->songService->getById((int) $vars['id']);
@@ -197,7 +197,7 @@ class SongController extends Controller
             $this->json(['error' => 'Song not found.'], 404);
         }
 
-        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+        if ((int) $song->created_by !== (int) $tokenData->id && $tokenData->role !== 'admin') {
             $this->json(['error' => 'Forbidden.'], 403);
         }
 
@@ -207,8 +207,8 @@ class SongController extends Controller
         $this->json($this->songToArray($this->songService->getById($song->id)));
     }
 
-    // DELETE /api/songs/{id} (JWT required)
-    public function destroy(array $vars = []): void
+    // DELETE /api/songs/{id}
+    public function deleteSong(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $song      = $this->songService->getById((int) $vars['id']);
@@ -217,7 +217,7 @@ class SongController extends Controller
             $this->json(['error' => 'Song not found.'], 404);
         }
 
-        if ($song->created_by !== $tokenData->id && $tokenData->role !== 'admin') {
+        if ((int) $song->created_by !== (int) $tokenData->id && $tokenData->role !== 'admin') {
             $this->json(['error' => 'Forbidden.'], 403);
         }
 

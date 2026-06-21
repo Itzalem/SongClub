@@ -35,23 +35,20 @@ class PostController extends Controller
         exit;
     }
 
-    // GET /api/feed?page=&limit=
-    public function feed(array $vars = []): void
+    // GET /api/feed?page=&limit=&user_id=
+    public function showFeed(array $vars = []): void
     {
         ['page' => $page, 'limit' => $limit, 'offset' => $offset] = $this->getPagination(10);
+        $userId = max(0, (int) ($_GET['user_id'] ?? 0));
 
-        $posts = $this->postService->getFeed($offset, $limit);
-        $total = $this->postService->countFeed();
-        $pages = (int) ceil($total / $limit) ?: 1;
+        $posts = $this->postService->getFeed($offset, $limit, $userId);
+        $total = $this->postService->countFeed($userId);
 
-        $this->json([
-            'data' => array_map([$this, 'postToArray'], $posts),
-            'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'total_pages' => $pages],
-        ]);
+        $this->jsonPaged(array_map([$this, 'postToArray'], $posts), $page, $limit, $total);
     }
 
-    // POST /api/posts (JWT required)
-    public function store(array $vars = []): void
+    // POST /api/posts 
+    public function createPost(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $body      = $this->getBody();
@@ -62,10 +59,7 @@ class PostController extends Controller
             $this->json(['error' => 'song_id is required.'], 400);
         }
 
-        $this->postService->createPost((int) $tokenData->id, $songId, $caption ?: null);
-
-        $posts = $this->postService->getAllByUser((int) $tokenData->id);
-        $post  = $posts[0] ?? null;
+        $post = $this->postService->createAndGet((int) $tokenData->id, $songId, $caption ?: null);
 
         if (!$post) {
             $this->json(['error' => 'Post could not be created.'], 500);
@@ -75,7 +69,7 @@ class PostController extends Controller
     }
 
     // GET /api/posts/{id}/comments
-    public function comments(array $vars = []): void
+    public function showComments(array $vars = []): void
     {
         $postId = (int) ($vars['id'] ?? 0);
 
@@ -93,8 +87,8 @@ class PostController extends Controller
         ], $this->commentService->getByPost($postId)));
     }
 
-    // POST /api/posts/{id}/comments (JWT required)
-    public function storeComment(array $vars = []): void
+    // POST /api/posts/{id}/comments
+    public function createComment(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $postId    = (int) ($vars['id'] ?? 0);

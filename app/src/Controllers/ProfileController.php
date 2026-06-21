@@ -51,12 +51,7 @@ class ProfileController extends Controller
         $vm          = new ProfileVm();
         $vm->user    = $user;
         $vm->isOwner = ($currentUserId > 0 && $currentUserId === $profileUserId);
-        $vm->posts   = $this->postService->getAllByUser($profileUserId);
-
-        foreach ($vm->posts as $post) {
-            $post->comments = $this->commentService->getByPost($post->id);
-        }
-
+        $vm->posts   = $this->loadPostsWithComments($profileUserId);
         $vm->favorites = $this->favoriteService->getFavoritesByUser($profileUserId);
 
         if ($vm->isOwner) {
@@ -132,18 +127,6 @@ class ProfileController extends Controller
         $email    = trim($_POST['email']    ?? '');
         $bio      = trim($_POST['bio']      ?? '');
 
-        if ($username === '') {
-            $_SESSION['edit_error'] = 'Username cannot be empty.';
-            header('Location: /profile/edit');
-            exit;
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['edit_error'] = 'Please enter a valid email address.';
-            header('Location: /profile/edit');
-            exit;
-        }
-
         try {
             $this->userService->updateProfile($user, $username, $email, $bio);
             $_SESSION['username'] = $username;
@@ -176,30 +159,35 @@ class ProfileController extends Controller
         exit;
     }
 
-    // POST /profile/update — legacy web endpoint
+    // POST /profile/update 
     public function update(array $vars = []): void
     {
         $this->requireAuth();
 
         $username = trim($_POST['username'] ?? '');
         $bio      = trim($_POST['bio']      ?? '');
+        $userId   = (int) $_SESSION['user_id'];
+        $user     = $this->userService->getUserById($userId);
 
-        if ($username === '') {
-            header('Location: /profile/' . (int) $_SESSION['user_id']);
-            exit;
+        if ($user && $username !== '') {
+            try {
+                $this->userService->updateProfile($user, $username, $user->email, $bio);
+                $_SESSION['username'] = $username;
+            } catch (\InvalidArgumentException) {
+            }
         }
 
-        $user = $this->userService->getUserById((int) $_SESSION['user_id']);
-
-        if ($user) {
-            $user->username       = $username;
-            $user->bio            = $bio ?: null;
-            $this->userService->updateUser($user);
-            $_SESSION['username'] = $username;
-        }
-
-        header('Location: /profile/' . (int) $_SESSION['user_id']);
+        header('Location: /profile/' . $userId);
         exit;
+    }
+
+    private function loadPostsWithComments(int $userId): array
+    {
+        $posts = $this->postService->getAllByUser($userId);
+        foreach ($posts as $post) {
+            $post->comments = $this->commentService->getByPost($post->id);
+        }
+        return $posts;
     }
 
     private function validatePasswordChange(string $hash, string $current, string $new, string $confirm): ?string

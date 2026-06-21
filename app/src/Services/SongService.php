@@ -37,30 +37,31 @@ class SongService implements ISongService
 
     public function create(array $data, int $userId): int
     {
-        $song             = new Song();
-        $song->title      = trim($data['title']);
-        $song->artist     = trim($data['artist']);
-        $song->album      = !empty($data['album']) ? trim($data['album']) : null;
-        $song->genre      = !empty($data['genre']) ? trim($data['genre']) : null;
-        $song->link       = !empty($data['link'])  ? trim($data['link'])  : null;
+        $song             = $this->buildSong($data);
         $song->created_by = $userId;
         return $this->songRepository->createSong($song);
     }
 
     public function update(array $data): bool
     {
-        $song         = new Song();
-        $song->id     = (int) $data['id'];
-        $song->title  = trim($data['title']);
-        $song->artist = trim($data['artist']);
-        $song->album  = !empty($data['album']) ? trim($data['album']) : null;
-        $song->genre  = !empty($data['genre']) ? trim($data['genre']) : null;
-        $song->link   = !empty($data['link'])  ? trim($data['link'])  : null;
+        $song     = $this->buildSong($data);
+        $song->id = (int) $data['id'];
         return $this->songRepository->updateSong($song);
     }
 
     public function delete(int $id): void
     {
         $this->songRepository->deleteSong($id);
+    }
+
+    private function buildSong(array $data): Song
+    {
+        $song         = new Song();
+        $song->title  = trim($data['title']);
+        $song->artist = trim($data['artist']);
+        $song->album  = !empty($data['album']) ? trim($data['album']) : null;
+        $song->genre  = !empty($data['genre']) ? trim($data['genre']) : null;
+        $song->link   = !empty($data['link'])  ? trim($data['link'])  : null;
+        return $song;
     }
 }

@@ -66,8 +66,7 @@ onMounted(async () => {
 })
 
 async function save() {
-  error.value   = ''
-  success.value = ''
+  error.value = ''
   try {
     const res = await api.put(`/api/users/${auth.user.id}`, form.value)
     auth.user.username = res.data.username

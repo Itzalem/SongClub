@@ -26,7 +26,7 @@ class AccountController extends Controller
         $this->render('Landing', []);
     }
 
-    // GET|POST /login
+    // /login
     public function login(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {
@@ -60,7 +60,7 @@ class AccountController extends Controller
         $this->render('Login', ['error' => $error]);
     }
 
-    // GET|POST /register
+    // /register
     public function register(array $vars = []): void
     {
         if (isset($_SESSION['user_id'])) {

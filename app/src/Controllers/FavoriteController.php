@@ -11,13 +11,15 @@ use App\Repositories\UserRepository;
 class FavoriteController extends Controller
 {
     private FavoriteService $favoriteService;
+    private UserService     $userService;
 
     public function __construct()
     {
         $this->favoriteService = new FavoriteService(new InteractionRepository());
+        $this->userService     = new UserService(new UserRepository());
     }
 
-    // POST /favorites/toggle (web AJAX, session-based)
+    // POST /favorites/toggle 
     public function toggle(array $vars = []): void
     {
         $this->requireAuth();
@@ -32,7 +34,7 @@ class FavoriteController extends Controller
         $this->json(['favorited' => $added]);
     }
 
-    // POST /likes/toggle (web AJAX, session-based)
+    // POST /likes/toggle 
     public function toggleLike(array $vars = []): void
     {
         $this->requireAuth();
@@ -54,8 +56,7 @@ class FavoriteController extends Controller
         $this->requireAuth();
 
         $profileUserId = (int) ($vars['id'] ?? 0);
-        $userService   = new UserService(new UserRepository());
-        $profileUser   = $userService->getUserById($profileUserId);
+        $profileUser   = $this->userService->getUserById($profileUserId);
 
         if (!$profileUser) {
             http_response_code(404);
@@ -83,7 +84,7 @@ class FavoriteController extends Controller
         ]);
     }
 
-    // GET /profile/{id}/liked (owner only)
+    // GET /profile/{id}/liked (only the owner can view it)
     public function userLiked(array $vars = []): void
     {
         $this->requireAuth();
@@ -100,8 +101,8 @@ class FavoriteController extends Controller
         ]);
     }
 
-    // GET /api/users/{id}/favorites?artist=&page=&limit=
-    public function favorites(array $vars = []): void
+    // GET /api/users/{id}/favorites...with filters
+    public function showFavorites(array $vars = []): void
     {
         $userId = (int) ($vars['id'] ?? 0);
         $artist = trim($_GET['artist'] ?? '');
@@ -109,16 +110,12 @@ class FavoriteController extends Controller
 
         $songs = $this->favoriteService->getFavoritesFiltered($userId, $artist, $offset, $limit);
         $total = $this->favoriteService->countFavorites($userId, $artist);
-        $pages = (int) ceil($total / $limit) ?: 1;
 
-        $this->json([
-            'data' => array_map([$this, 'songToArray'], $songs),
-            'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'total_pages' => $pages],
-        ]);
+        $this->jsonPaged(array_map([$this, 'songToArray'], $songs), $page, $limit, $total);
     }
 
-    // GET /api/users/{id}/liked?artist=&page=&limit= (JWT required, owner/admin only)
-    public function liked(array $vars = []): void
+    // GET /api/users/{id}/liked....withf filters
+    public function showLiked(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $userId    = (int) ($vars['id'] ?? 0);
@@ -132,16 +129,12 @@ class FavoriteController extends Controller
 
         $songs = $this->favoriteService->getLikedFiltered($userId, $artist, $offset, $limit);
         $total = $this->favoriteService->countLiked($userId, $artist);
-        $pages = (int) ceil($total / $limit) ?: 1;
 
-        $this->json([
-            'data' => array_map([$this, 'songToArray'], $songs),
-            'meta' => ['page' => $page, 'limit' => $limit, 'total' => $total, 'total_pages' => $pages],
-        ]);
+        $this->jsonPaged(array_map([$this, 'songToArray'], $songs), $page, $limit, $total);
     }
 
-    // POST /api/songs/{id}/favorite (JWT required)
-    public function favorite(array $vars = []): void
+    // POST /api/songs/{id}/favorite 
+    public function favoriteSong(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $songId    = (int) ($vars['id'] ?? 0);
@@ -149,8 +142,8 @@ class FavoriteController extends Controller
         $this->json(['favorited' => $added]);
     }
 
-    // POST /api/songs/{id}/like (JWT required)
-    public function like(array $vars = []): void
+    // POST /api/songs/{id}/like 
+    public function likeSong(array $vars = []): void
     {
         $tokenData = $this->validateJWT();
         $songId    = (int) ($vars['id'] ?? 0);
@@ -159,7 +152,7 @@ class FavoriteController extends Controller
         $this->json(['liked' => $added, 'count' => $count]);
     }
 
-    // GET /api/favorites/{userId} — export as JSON download
+    // GET /api/favorites/{userId} (here is the export to JSON)
     public function export(array $vars = []): void
     {
         $this->requireAuth();

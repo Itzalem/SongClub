@@ -9,7 +9,7 @@ class User
     public ?string $bio          = null;
     public ?string $email        = null;
     public ?string $passwordHash = null;
-    public ?string $role         = null;   // 'admin' | 'user'
+    public ?string $role         = null;   
 
     public function __construct(array $data = [])
     {

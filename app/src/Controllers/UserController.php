@@ -37,7 +37,7 @@ class UserController extends Controller
         exit;
     }
 
-    // POST /profile/update (legacy web endpoint)
+    // POST /profile/update 
     public function update(array $vars = []): void
     {
         $this->requireAuth();
@@ -64,7 +64,7 @@ class UserController extends Controller
     }
 
     // GET /api/users/{id}
-    public function show(array $vars = []): void
+    public function showUser(array $vars = []): void
     {
         $user = $this->userService->getUserById((int) $vars['id']);
 
@@ -75,13 +75,63 @@ class UserController extends Controller
         $this->json([
             'id'       => $user->userId,
             'username' => $user->username,
+            'email'    => $user->email,
             'bio'      => $user->bio,
             'role'     => $user->role,
         ]);
     }
 
-    // GET /api/users/search?q=
-    public function search(array $vars = []): void
+    // PUT /api/users/{id} (JWT required, owner only)
+    public function updateProfile(array $vars = []): void
+    {
+        $tokenData = $this->validateJWT();
+        $userId    = (int) ($vars['id'] ?? 0);
+
+        if ((int) $tokenData->id !== $userId) {
+            $this->json(['error' => 'Forbidden.'], 403);
+        }
+
+        $body     = $this->getBody();
+        $username = trim($body['username'] ?? '');
+        $email    = trim($body['email']    ?? '');
+        $bio      = trim($body['bio']      ?? '');
+
+        if ($username === '') { $this->json(['error' => 'Username is required.'], 400); }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $this->json(['error' => 'Invalid email address.'], 400); }
+
+        $repo = new UserRepository();
+        $user = $repo->getUserById($userId);
+        if (!$user) { $this->json(['error' => 'User not found.'], 404); }
+
+        if ($username !== $user->username && $repo->getUserByUsername($username)) {
+            $this->json(['error' => 'Username already taken.'], 409);
+        }
+        if ($email !== $user->email && $repo->getUserByEmail($email)) {
+            $this->json(['error' => 'Email already registered.'], 409);
+        }
+
+        $user->username = $username;
+        $user->email    = $email;
+        $user->bio      = $bio ?: null;
+        $this->userService->updateUser($user);
+
+        $currentPassword = $body['current_password'] ?? '';
+        $newPassword     = $body['new_password']     ?? '';
+        if ($newPassword !== '') {
+            if (!password_verify($currentPassword, $user->passwordHash)) {
+                $this->json(['error' => 'Current password is incorrect.'], 400);
+            }
+            if (strlen($newPassword) < 6) {
+                $this->json(['error' => 'New password must be at least 6 characters.'], 400);
+            }
+            $this->userService->changePassword($userId, $newPassword);
+        }
+
+        $this->json(['id' => $userId, 'username' => $username, 'email' => $email, 'bio' => $bio ?: null]);
+    }
+
+    // GET /api/users/search....(search users by username)
+    public function searchUsers(array $vars = []): void
     {
         $this->requireAuth();
 
@@ -94,8 +144,8 @@ class UserController extends Controller
         ], $users));
     }
 
-    // GET /api/admin/users (JWT + admin required)
-    public function adminList(array $vars = []): void
+    // GET /api/admin/users 
+    public function listUsers(array $vars = []): void
     {
         $this->requireJwtAdmin();
 
@@ -108,8 +158,8 @@ class UserController extends Controller
         ], $this->userService->getAllUsers()));
     }
 
-    // DELETE /api/admin/users/{id} (JWT + admin required)
-    public function adminDelete(array $vars = []): void
+    // DELETE /api/admin/users/{id} 
+    public function removeUser(array $vars = []): void
     {
         $tokenData = $this->requireJwtAdmin();
 

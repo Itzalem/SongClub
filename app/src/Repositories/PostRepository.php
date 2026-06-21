@@ -31,28 +31,30 @@ class PostRepository extends Repository implements IPostRepository
         return $posts;
     }
 
-    public function getFeed(int $offset, int $limit): array
+    public function getFeed(int $offset, int $limit, int $userId = 0): array
     {
-        $sql = "SELECT p.id, p.user_id, p.song_id, p.caption, p.created_at,
-                       s.title AS song_title, s.artist AS song_artist,
-                       s.genre AS song_genre, s.link AS song_link,
-                       u.username,
-                       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
-                FROM posts p
-                JOIN songs s ON p.song_id = s.id
-                JOIN users u ON p.user_id = u.id
-                ORDER BY p.created_at DESC
-                LIMIT :limit OFFSET :offset";
+        $where = $userId > 0 ? 'WHERE p.user_id = :userId' : '';
+        $sql   = "SELECT p.id, p.user_id, p.song_id, p.caption, p.created_at,
+                         s.title AS song_title, s.artist AS song_artist,
+                         s.genre AS song_genre, s.link AS song_link,
+                         u.username,
+                         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+                  FROM posts p
+                  JOIN songs s ON p.song_id = s.id
+                  JOIN users u ON p.user_id = u.id
+                  {$where}
+                  ORDER BY p.created_at DESC
+                  LIMIT :limit OFFSET :offset";
 
         $connection = $this->getConnection();
         $statement  = $connection->prepare($sql);
+        if ($userId > 0) { $statement->bindValue(':userId', $userId, PDO::PARAM_INT); }
         $statement->bindParam(':limit',  $limit,  PDO::PARAM_INT);
         $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
         $statement->execute();
 
-        $rows  = $statement->fetchAll(PDO::FETCH_ASSOC);
         $posts = [];
-        foreach ($rows as $row) {
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $post                = new Post($row);
             $post->username      = $row['username'];
             $post->comment_count = (int) $row['comment_count'];
@@ -61,11 +63,13 @@ class PostRepository extends Repository implements IPostRepository
         return $posts;
     }
 
-    public function countFeed(): int
+    public function countFeed(int $userId = 0): int
     {
-        $sql        = "SELECT COUNT(*) FROM posts";
+        $where     = $userId > 0 ? 'WHERE user_id = :userId' : '';
+        $sql       = "SELECT COUNT(*) FROM posts {$where}";
         $connection = $this->getConnection();
         $statement  = $connection->prepare($sql);
+        if ($userId > 0) { $statement->bindValue(':userId', $userId, PDO::PARAM_INT); }
         $statement->execute();
         return (int) $statement->fetchColumn();
     }

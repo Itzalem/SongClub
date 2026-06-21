@@ -13,7 +13,7 @@ class Post
     public int     $comment_count = 0;
     public int     $like_count    = 0;
 
-    // Joined song fields — populated when fetching with JOIN
+    //song details for when returning post data
     public ?string $song_title  = null;
     public ?string $song_artist = null;
     public ?string $song_album  = null;

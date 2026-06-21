@@ -102,7 +102,6 @@ class UserRepository extends Repository implements IUserRepository
         $connection = $this->getConnection();
         $statement  = $connection->prepare($sql);
 
-        // Password is already hashed by UserService — do NOT hash again
         $statement->bindParam(':username', $user->username);
         $statement->bindParam(':email',    $user->email);
         $statement->bindParam(':password', $user->passwordHash);

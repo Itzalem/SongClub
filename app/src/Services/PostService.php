@@ -20,14 +20,14 @@ class PostService implements IPostService
         return $this->repo->getAllByUserId($userId);
     }
 
-    public function getFeed(int $offset, int $limit): array
+    public function getFeed(int $offset, int $limit, int $userId = 0): array
     {
-        return $this->repo->getFeed($offset, $limit);
+        return $this->repo->getFeed($offset, $limit, $userId);
     }
 
-    public function countFeed(): int
+    public function countFeed(int $userId = 0): int
     {
-        return $this->repo->countFeed();
+        return $this->repo->countFeed($userId);
     }
 
     public function createPost(int $userId, int $songId, ?string $caption): int
