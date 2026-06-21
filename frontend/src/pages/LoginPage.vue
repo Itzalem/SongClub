@@ -23,6 +23,11 @@
           Don't have an account?
           <router-link to="/register" class="fw-bold" style="color:var(--sc-olive)">Join</router-link>
         </p>
+        
+        <p class="text-center mt-4 text-muted">
+            | `admin` | admin@songclub.com | `password` | Admin |
+            | `alice` | alice@songclub.com | `password` | User |
+        </p>
       </div>
     </div>
   </div>
